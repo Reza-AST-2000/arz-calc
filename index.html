@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0B1210">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>محاسبه‌گر ارز، طلا و کریپتو</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1210;
+    --bg2:#0E1614;
+    --surface:#141F1C;
+    --surface2:#1B2925;
+    --line: rgba(242,169,61,0.09);
+    --amber:#F2A93B;
+    --teal:#59C3B4;
+    --rust:#D3684C;
+    --gold:#D9B24C;
+    --violet:#9C8DE0;
+    --text:#EFEBE1;
+    --muted:#889592;
+    --danger:#E2664B;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(900px 500px at 15% -8%, rgba(217,178,76,0.05), transparent 60%),
+      radial-gradient(900px 600px at 100% 0%, rgba(89,195,180,0.05), transparent 55%),
+      linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
+    color:var(--text);
+    font-family:'Vazirmatn', sans-serif;
+    display:flex; justify-content:center;
+    min-height:100vh;
+  }
+  #app{
+    width:100%; max-width:460px; min-height:100vh;
+    display:flex; flex-direction:column;
+    position:relative;
+    box-shadow: 0 0 70px rgba(0,0,0,0.55);
+  }
+
+  /* ---- Top bar ---- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 18px 6px;
+  }
+  .brand{ display:flex; align-items:center; gap:9px; }
+  .brand .mark{
+    width:30px; height:30px; border-radius:9px;
+    background:linear-gradient(135deg, var(--amber), var(--gold));
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px; box-shadow:0 4px 14px rgba(217,178,76,0.25);
+  }
+  header h1{ font-size:14.5px; font-weight:700; margin:0; letter-spacing:.2px; color:var(--muted); }
+  header h1 b{ color:var(--text); font-weight:800; display:block; font-size:15.5px; margin-top:1px;}
+  #settingsBtn{
+    width:34px; height:34px; border-radius:50%;
+    background:var(--surface2); border:1px solid var(--line);
+    color:var(--muted); display:flex; align-items:center; justify-content:center;
+    font-size:16px; cursor:pointer;
+  }
+
+  /* ---- LCD display ---- */
+  #screen{
+    margin:8px 16px 12px;
+    border-radius:20px;
+    padding:20px 18px 16px;
+    background:
+      repeating-linear-gradient(180deg, rgba(0,0,0,0.14) 0px, rgba(0,0,0,0.14) 1px, transparent 1px, transparent 3px),
+      linear-gradient(160deg, #101B18 0%, #0A1412 100%);
+    border:1px solid rgba(242,169,59,0.14);
+    box-shadow: inset 0 0 34px rgba(0,0,0,0.6), 0 10px 26px rgba(0,0,0,0.4);
+    position:relative; overflow:hidden;
+  }
+  #screen::before{
+    content:"";
+    position:absolute; top:-40%; left:-10%; width:70%; height:180%;
+    background: linear-gradient(120deg, rgba(242,169,59,0.06), transparent 55%);
+    pointer-events:none;
+  }
+  #expr{
+    direction:ltr; text-align:left;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14.5px; color:var(--muted);
+    min-height:18px; letter-spacing:.5px;
+    white-space:nowrap; overflow-x:auto; position:relative;
+  }
+  #result{
+    direction:ltr; text-align:left;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:38px; font-weight:600; color:var(--amber);
+    text-shadow: 0 0 20px rgba(242,169,59,0.32);
+    margin-top:6px; white-space:nowrap; overflow-x:auto; position:relative;
+  }
+  #memChip{
+    display:inline-block; margin-top:8px; font-size:10.5px; color:var(--teal);
+    border:1px solid rgba(89,195,180,0.35); padding:2px 9px; border-radius:20px;
+    font-family:'IBM Plex Mono', monospace; visibility:hidden; position:relative;
+  }
+
+  /* ---- Tabs (bottom nav) ---- */
+  nav{
+    margin-top:auto;
+    display:flex; border-top:1px solid var(--line);
+    background:var(--surface);
+  }
+  nav button{
+    flex:1; padding:11px 0 calc(9px + env(safe-area-inset-bottom));
+    background:none; border:none; color:var(--muted);
+    font-family:'Vazirmatn'; font-size:12px; font-weight:600;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    cursor:pointer; position:relative;
+  }
+  nav button .ic{ font-size:18px; }
+  nav button.active{ color:var(--amber); }
+  nav button.active::before{
+    content:""; position:absolute; top:0; left:30%; right:30%; height:2px;
+    background:var(--amber); border-radius:2px;
+  }
+
+  .view{ display:none; flex:1; flex-direction:column; min-height:0; }
+  .view.active{ display:flex; }
+
+  /* ---- Keypad ---- */
+  #keypad{
+    padding:6px 14px 6px; display:flex; flex-direction:column; gap:8px; flex:1;
+  }
+  .row{ display:flex; gap:8px; }
+  .key{
+    flex:1; aspect-ratio:1.5/1;
+    border-radius:14px; border:1px solid var(--line);
+    background:var(--surface2); color:var(--text);
+    font-family:'IBM Plex Mono', monospace; font-size:19px; font-weight:500;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; user-select:none;
+    transition: transform .06s ease, background .15s;
+  }
+  .key:active{ transform:scale(0.94); background:#26332F; }
+  .key.op{ background:rgba(242,169,59,0.10); color:var(--amber); border-color:rgba(242,169,59,0.25); }
+  .key.eq{ background:linear-gradient(135deg, var(--amber), var(--gold)); color:#14201B; font-weight:700; border-color:transparent; }
+  .key.fn{ background:rgba(89,195,180,0.08); color:var(--teal); font-size:13.5px; border-color:rgba(89,195,180,0.2); }
+  .key.danger{ color:var(--danger); }
+
+  #sciToggle{
+    margin:0 14px 6px; text-align:center;
+    font-size:11.5px; color:var(--muted); padding:8px; border-radius:10px;
+    border:1px dashed var(--line); cursor:pointer;
+  }
+  #sciRows{ display:none; flex-direction:column; gap:8px; }
+  #sciRows.open{ display:flex; }
+
+  /* ---- Rates view ---- */
+  #ratesArea{ padding:2px 16px 16px; overflow-y:auto; flex:1; }
+  .subtabs{
+    display:flex; gap:7px; margin:6px 0 14px; overflow-x:auto; padding-bottom:2px;
+    scrollbar-width:none;
+  }
+  .subtabs::-webkit-scrollbar{ display:none; }
+  .subtab{
+    flex:0 0 auto; display:flex; align-items:center; gap:6px;
+    padding:9px 14px; border-radius:20px; white-space:nowrap;
+    font-size:12px; font-weight:700; cursor:pointer;
+    border:1px solid var(--line); color:var(--muted); background:var(--surface);
+  }
+  .subtab .dot{ width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.5; }
+  .subtab.on{ color:#14201B; }
+  .subtab.on .dot{ opacity:0; }
+  .subtab.on[data-c="market"]{ background:var(--rust); border-color:var(--rust); }
+  .subtab.on[data-c="global"]{ background:var(--teal); border-color:var(--teal); }
+  .subtab.on[data-c="gold"]{ background:var(--gold); border-color:var(--gold); }
+  .subtab.on[data-c="crypto"]{ background:var(--violet); border-color:var(--violet); }
+
+  .ratelist{ display:none; flex-direction:column; gap:9px; }
+  .ratelist.on{ display:flex; }
+
+  .rate-card{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:12px 14px; cursor:pointer; border-right:3px solid transparent;
+  }
+  .rate-card:active{ background:var(--surface2); }
+  .rate-card.market{ border-right-color: rgba(211,104,76,0.6); }
+  .rate-card.global{ border-right-color: rgba(89,195,180,0.6); }
+  .rate-card.gold{ border-right-color: rgba(217,178,76,0.6); }
+  .rate-card.crypto{ border-right-color: rgba(156,141,224,0.6); }
+  .rate-left{ display:flex; align-items:center; gap:10px; }
+  .flag{ font-size:19px; width:26px; text-align:center; }
+  .rname{ font-size:13.5px; font-weight:600; }
+  .rcode{ font-size:10.5px; color:var(--muted); font-family:'IBM Plex Mono',monospace; }
+  .rval-wrap{ text-align:left; }
+  .rval{ font-family:'IBM Plex Mono', monospace; font-size:15px; font-weight:600; direction:ltr; }
+  .rsub{ font-size:10px; color:var(--muted); direction:ltr; margin-top:1px;}
+  .market .rval{ color:var(--rust); }
+  .global .rval{ color:var(--teal); }
+  .gold .rval{ color:var(--gold); }
+  .crypto .rval{ color:var(--violet); }
+  .runit{ font-size:10px; color:var(--muted); margin-right:3px; }
+
+  .hint{ font-size:11.5px; color:var(--muted); line-height:1.9; margin:4px 2px 14px; }
+  .statusrow{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .refresh{
+    font-size:11.5px; border:1px solid var(--line); color:var(--text);
+    padding:6px 12px; border-radius:20px; cursor:pointer; background:var(--surface2);
+  }
+  .updated{ font-size:10.5px; color:var(--muted); }
+  .section-label{ font-size:11px; color:var(--muted); margin:14px 2px 8px; display:flex; align-items:center; gap:6px;}
+  .section-label::after{ content:""; flex:1; height:1px; background:var(--line); }
+
+  /* ---- Settings modal ---- */
+  #overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.55); display:none;
+    align-items:flex-end; justify-content:center; z-index:20;
+  }
+  #overlay.on{ display:flex; }
+  #sheet{
+    width:100%; max-width:460px; background:var(--surface); border-radius:20px 20px 0 0;
+    padding:20px 20px calc(20px + env(safe-area-inset-bottom)); border:1px solid var(--line); border-bottom:none;
+  }
+  #sheet h3{ margin:0 0 10px; font-size:14px; color:var(--amber); }
+  #sheet p{ font-size:12px; color:var(--muted); line-height:1.9; margin:0 0 12px;}
+  #sheet input{
+    width:100%; direction:ltr; text-align:left; background:var(--surface2); color:var(--text);
+    border:1px solid var(--line); border-radius:10px; padding:11px 12px; font-family:'IBM Plex Mono',monospace;
+    font-size:13px; margin-bottom:12px;
+  }
+  #sheet .row2{ display:flex; gap:10px; }
+  #sheet button.act{
+    flex:1; padding:11px 0; border-radius:10px; border:none; font-weight:700; font-size:13px; cursor:pointer;
+  }
+  #sheet .save{ background:var(--amber); color:#141B1A; }
+  #sheet .close{ background:var(--surface2); color:var(--muted); border:1px solid var(--line); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="brand">
+      <div class="mark">🧮</div>
+      <h1>محاسبه‌گر مالی<b>ارز · طلا · کریپتو</b></h1>
+    </div>
+    <div id="settingsBtn" onclick="openSettings()">⚙</div>
+  </header>
+
+  <div id="screen">
+    <div id="expr">0</div>
+    <div id="result">0</div>
+    <div id="memChip">M</div>
+  </div>
+
+  <!-- CALCULATOR VIEW -->
+  <div class="view active" id="view-calc">
+    <div id="sciToggle" onclick="toggleSci()">﹢ توابع علمی (sin، √، ^ و...)</div>
+    <div id="sciRows">
+      <div class="row">
+        <div class="key fn" onclick="applyFn('sin')">sin</div>
+        <div class="key fn" onclick="applyFn('cos')">cos</div>
+        <div class="key fn" onclick="applyFn('tan')">tan</div>
+        <div class="key fn" onclick="applyFn('ln')">ln</div>
+        <div class="key fn" onclick="applyFn('log')">log</div>
+      </div>
+      <div class="row">
+        <div class="key fn" onclick="applyFn('sqrt')">√</div>
+        <div class="key fn" onclick="applyFn('sq')">x²</div>
+        <div class="key op" onclick="append('^')">x^y</div>
+        <div class="key fn" onclick="append('3.14159265')">π</div>
+        <div class="key fn" onclick="append('2.71828182')">e</div>
+      </div>
+      <div class="row">
+        <div class="key fn" onclick="memAdd()">M+</div>
+        <div class="key fn" onclick="memSub()">M−</div>
+        <div class="key fn" onclick="memRecall()">MR</div>
+        <div class="key fn" onclick="memClear()">MC</div>
+        <div class="key op" onclick="append('(')">(</div>
+      </div>
+    </div>
+
+    <div id="keypad">
+      <div class="row">
+        <div class="key danger" onclick="clearAll()">AC</div>
+        <div class="key" onclick="backspace()">⌫</div>
+        <div class="key op" onclick="applyFn('percent')">%</div>
+        <div class="key op" onclick="append('÷')">÷</div>
+      </div>
+      <div class="row">
+        <div class="key" onclick="append('7')">7</div>
+        <div class="key" onclick="append('8')">8</div>
+        <div class="key" onclick="append('9')">9</div>
+        <div class="key op" onclick="append('×')">×</div>
+      </div>
+      <div class="row">
+        <div class="key" onclick="append('4')">4</div>
+        <div class="key" onclick="append('5')">5</div>
+        <div class="key" onclick="append('6')">6</div>
+        <div class="key op" onclick="append('−')">−</div>
+      </div>
+      <div class="row">
+        <div class="key" onclick="append('1')">1</div>
+        <div class="key" onclick="append('2')">2</div>
+        <div class="key" onclick="append('3')">3</div>
+        <div class="key op" onclick="append('+')">+</div>
+      </div>
+      <div class="row">
+        <div class="key" onclick="applyFn('neg')">±</div>
+        <div class="key" onclick="append('0')">0</div>
+        <div class="key" onclick="append('.')">.</div>
+        <div class="key eq" onclick="doEquals()">=</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RATES VIEW -->
+  <div class="view" id="view-rates">
+    <div id="ratesArea">
+      <div class="subtabs">
+        <div class="subtab on" data-c="market" id="tab-market" onclick="showRateList('market')"><span class="dot"></span>🇮🇷 بازار آزاد</div>
+        <div class="subtab" data-c="global" id="tab-global" onclick="showRateList('global')"><span class="dot"></span>🌍 جهانی</div>
+        <div class="subtab" data-c="gold" id="tab-gold" onclick="showRateList('gold')"><span class="dot"></span>🪙 طلا</div>
+        <div class="subtab" data-c="crypto" id="tab-crypto" onclick="showRateList('crypto')"><span class="dot"></span>◈ کریپتو</div>
+      </div>
+
+      <!-- MARKET (manual/editable + optional auto fetch) -->
+      <div class="ratelist market on" id="list-market">
+        <div class="statusrow">
+          <span class="updated" id="marketUpdated">لمس = وارد ماشین‌حساب / دوبار لمس روی عدد = ویرایش</span>
+          <button class="refresh" onclick="fetchMarketRates()">↻ خودکار</button>
+        </div>
+        <div class="section-label">ارزها (تومان)</div>
+        <div id="marketCards"></div>
+        <div class="section-label">طلا و سکه داخلی (تومان)</div>
+        <div id="goldIranCards"></div>
+        <div class="hint">
+          نرخ‌های این بخش نمونهٔ قابل‌ویرایش‌اند. با «دریافت خودکار» تلاش می‌شود از یک سرویس رایگان با محدودیت درخواست دریافت شود (ممکن است گاهی در دسترس نباشد). برای دقت بیشتر می‌توانید کلید API رایگان خودتان را از brsapi.ir بگیرید و در تنظیمات ⚙ وارد کنید. مقادیرِ ویرایش‌شده روی همین گوشی ذخیره می‌شوند.
+        </div>
+      </div>
+
+      <!-- GLOBAL FX -->
+      <div class="ratelist global" id="list-global">
+        <div class="statusrow">
+          <span class="updated" id="globalUpdated">در حال دریافت...</span>
+          <button class="refresh" onclick="fetchGlobalRates()">↻ بروزرسانی</button>
+        </div>
+        <div id="globalCards"></div>
+        <div class="hint">نرخ برابری رسمی جهانی ارزها نسبت به دلار آمریکا (منبع: open.er-api.com).</div>
+      </div>
+
+      <!-- GOLD -->
+      <div class="ratelist gold" id="list-gold">
+        <div class="statusrow">
+          <span class="updated" id="goldUpdated">در حال دریافت...</span>
+          <button class="refresh" onclick="fetchGoldRates()">↻ بروزرسانی</button>
+        </div>
+        <div id="goldCards"></div>
+        <div class="hint">قیمت جهانی هر اونس طلا/نقره به دلار (منبع: gold-api.com). معادل تومانیِ هر گرم ۱۸ عیار صرفاً «تخمینی» و بر پایهٔ نرخ دلار بخش بازار آزاد محاسبه شده و شامل اجرت و حباب بازار داخلی نیست.</div>
+      </div>
+
+      <!-- CRYPTO -->
+      <div class="ratelist crypto" id="list-crypto">
+        <div class="statusrow">
+          <span class="updated" id="cryptoUpdated">در حال دریافت...</span>
+          <button class="refresh" onclick="fetchCryptoRates()">↻ بروزرسانی</button>
+        </div>
+        <div id="cryptoCards"></div>
+        <div class="hint">قیمت لحظه‌ای ارزهای دیجیتال به دلار (منبع: CoinGecko). معادل تومانی تخمینی بر پایهٔ نرخ دلار بخش بازار آزاد است.</div>
+      </div>
+    </div>
+  </div>
+
+  <nav>
+    <button class="active" id="nav-calc" onclick="switchView('calc')">
+      <span class="ic">🧮</span> ماشین‌حساب
+    </button>
+    <button id="nav-rates" onclick="switchView('rates')">
+      <span class="ic">💱</span> نرخ‌ها
+    </button>
+  </nav>
+</div>
+
+<!-- Settings sheet -->
+<div id="overlay" onclick="if(event.target===this) closeSettings()">
+  <div id="sheet">
+    <h3>کلید API اختصاصی (اختیاری)</h3>
+    <p>برای دریافت پایدارتر نرخ بازار آزاد، می‌توانید کلید رایگان خودتان را از brsapi.ir بگیرید و اینجا وارد کنید. در غیر این‌صورت از کلید نمایشی عمومی استفاده می‌شود که ممکن است محدود باشد.</p>
+    <input id="apiKeyInput" placeholder="مثلاً: xxxxxxxxxxxxxxxxxxxx">
+    <div class="row2">
+      <button class="act close" onclick="closeSettings()">بستن</button>
+      <button class="act save" onclick="saveApiKey()">ذخیره</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------- Storage helpers (persist manual edits on this device) ---------------- */
+async function loadState(){
+  try{
+    const r = await window.storage.get('state', false);
+    if(r && r.value) return JSON.parse(r.value);
+  }catch(e){}
+  return null;
+}
+async function saveState(){
+  try{
+    await window.storage.set('state', JSON.stringify({
+      marketRates, goldIran, apiKey
+    }), false);
+  }catch(e){}
+}
+
+/* ---------------- Calculator core ---------------- */
+let expr = "";
+let memory = 0;
+const exprEl = document.getElementById('expr');
+const resultEl = document.getElementById('result');
+const memChip = document.getElementById('memChip');
+
+function fmt(n){
+  if(n === "" || n === undefined || isNaN(n)) return "0";
+  let num = Number(n);
+  if(!isFinite(num)) return "خطا";
+  return num.toLocaleString('en-US', {maximumFractionDigits:8});
+}
+
+function toEvalString(e){
+  return e.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/\^/g,'**');
+}
+
+function safeEval(e){
+  if(!e) return 0;
+  let s = toEvalString(e);
+  if(!/^[0-9+\-*/.() ]+$/.test(s)) return NaN;
+  s = s.replace(/[+\-*/.]+$/,'');
+  if(!s) return 0;
+  try{
+    let v = Function('"use strict"; return (' + s + ')')();
+    return v;
+  }catch(err){ return NaN; }
+}
+
+function render(){
+  exprEl.textContent = expr === "" ? "0" : expr;
+  let v = safeEval(expr);
+  resultEl.textContent = fmt(v);
+  memChip.style.visibility = memory !== 0 ? 'visible' : 'hidden';
+}
+
+function append(ch){
+  const ops = ['+','−','×','÷','^'];
+  if(ops.includes(ch) && ops.includes(expr.slice(-1))){
+    expr = expr.slice(0,-1) + ch;
+  } else {
+    expr += ch;
+  }
+  render();
+}
+
+function insertNumber(numStr){
+  expr += (expr === "" ? "" : (/[0-9)]$/.test(expr) ? "×" : "")) + numStr;
+  render();
+  switchView('calc');
+}
+
+function clearAll(){ expr = ""; render(); }
+function backspace(){ expr = expr.slice(0,-1); render(); }
+
+function doEquals(){
+  let v = safeEval(expr);
+  expr = isNaN(v) ? "" : String(Math.round(v*1e8)/1e8);
+  render();
+}
+
+function currentValue(){
+  let v = safeEval(expr);
+  return isNaN(v) ? 0 : v;
+}
+
+function applyFn(fn){
+  let v = currentValue();
+  let out = v;
+  switch(fn){
+    case 'sin': out = Math.sin(v*Math.PI/180); break;
+    case 'cos': out = Math.cos(v*Math.PI/180); break;
+    case 'tan': out = Math.tan(v*Math.PI/180); break;
+    case 'ln': out = Math.log(v); break;
+    case 'log': out = Math.log10(v); break;
+    case 'sqrt': out = Math.sqrt(v); break;
+    case 'sq': out = v*v; break;
+    case 'percent': out = v/100; break;
+    case 'neg': out = -v; break;
+  }
+  out = Math.round(out*1e8)/1e8;
+  expr = String(out);
+  render();
+}
+
+function memAdd(){ memory += currentValue(); render(); }
+function memSub(){ memory -= currentValue(); render(); }
+function memRecall(){ expr = String(memory); render(); }
+function memClear(){ memory = 0; render(); }
+
+function toggleSci(){ document.getElementById('sciRows').classList.toggle('open'); }
+
+/* ---------------- Views / tabs ---------------- */
+function switchView(name){
+  document.getElementById('view-calc').classList.toggle('active', name==='calc');
+  document.getElementById('view-rates').classList.toggle('active', name==='rates');
+  document.getElementById('nav-calc').classList.toggle('active', name==='calc');
+  document.getElementById('nav-rates').classList.toggle('active', name==='rates');
+}
+
+function showRateList(which){
+  ['market','global','gold','crypto'].forEach(k=>{
+    document.getElementById('list-'+k).classList.toggle('on', k===which);
+    document.getElementById('tab-'+k).classList.toggle('on', k===which);
+  });
+}
+
+/* ---------------- Currency data ---------------- */
+const CURRENCIES = [
+  {code:'USD', name:'دلار آمریکا', flag:'🇺🇸'},
+  {code:'EUR', name:'یورو',        flag:'🇪🇺'},
+  {code:'GBP', name:'پوند انگلیس', flag:'🇬🇧'},
+  {code:'AED', name:'درهم امارات', flag:'🇦🇪'},
+  {code:'TRY', name:'لیر ترکیه',   flag:'🇹🇷'},
+  {code:'CNY', name:'یوان چین',    flag:'🇨🇳'},
+];
+
+let marketRates = { USD: 157000, EUR: 168000, GBP: 196000, AED: 42800, TRY: 4550, CNY: 21600 };
+let goldIran = { gram18: 8250000, bahar: 82000000 };
+let apiKey = "FreeSV0E1LSgB9RDjuf0QorSLViX8pPG";
+
+function makeCard(cls, flag, name, code, valStr, subStr, onTap, onEdit){
+  const card = document.createElement('div');
+  card.className = 'rate-card ' + cls;
+  card.innerHTML = `
+    <div class="rate-left">
+      <span class="flag">${flag}</span>
+      <div>
+        <div class="rname">${name}</div>
+        <div class="rcode">${code}</div>
+      </div>
+    </div>
+    <div class="rval-wrap">
+      <div class="rval">${valStr}</div>
+      ${subStr ? `<div class="rsub">${subStr}</div>` : ''}
+    </div>
+  `;
+  if(onTap) card.onclick = onTap;
+  if(onEdit) card.querySelector('.rval').ondblclick = (ev)=>{ ev.stopPropagation(); onEdit(); };
+  return card;
+}
+
+function renderMarketCards(){
+  const box = document.getElementById('marketCards');
+  box.innerHTML = "";
+  CURRENCIES.forEach(c=>{
+    const val = marketRates[c.code] ?? 0;
+    box.appendChild(makeCard('market', c.flag, c.name, c.code, fmt(val)+'<span class="runit">تومان</span>', null,
+      ()=> insertNumber(String(val)),
+      ()=>{
+        const input = prompt(c.name + ' — نرخ به تومان:', val);
+        if(input !== null && !isNaN(parseFloat(input))){ marketRates[c.code] = parseFloat(input); renderMarketCards(); saveState(); }
+      }
+    ));
+  });
+}
+
+function renderGoldIranCards(){
+  const box = document.getElementById('goldIranCards');
+  box.innerHTML = "";
+  box.appendChild(makeCard('market', '🥇', 'طلای ۱۸ عیار (هر گرم)', 'GOLD18', fmt(goldIran.gram18)+'<span class="runit">تومان</span>', null,
+    ()=> insertNumber(String(goldIran.gram18)),
+    ()=>{ const v = prompt('طلای ۱۸ عیار — قیمت هر گرم به تومان:', goldIran.gram18); if(v!==null && !isNaN(parseFloat(v))){ goldIran.gram18 = parseFloat(v); renderGoldIranCards(); saveState(); } }
+  ));
+  box.appendChild(makeCard('market', '🟡', 'سکه بهار آزادی', 'COIN', fmt(goldIran.bahar)+'<span class="runit">تومان</span>', null,
+    ()=> insertNumber(String(goldIran.bahar)),
+    ()=>{ const v = prompt('سکه بهار آزادی — قیمت به تومان:', goldIran.bahar); if(v!==null && !isNaN(parseFloat(v))){ goldIran.bahar = parseFloat(v); renderGoldIranCards(); saveState(); } }
+  ));
+}
+
+function renderGlobalCards(rates, base){
+  const box = document.getElementById('globalCards');
+  box.innerHTML = "";
+  CURRENCIES.forEach(c=>{
+    let val = c.code === base ? 1 : (rates && rates[c.code] ? rates[c.code] : null);
+    box.appendChild(makeCard('global', c.flag, c.name, `1 ${base} = ? ${c.code}`, val!==null? fmt(val) : '—', null,
+      val!==null ? ()=> insertNumber(String(val)) : null, null));
+  });
+}
+
+function renderGoldCards(xau, xag){
+  const box = document.getElementById('goldCards');
+  box.innerHTML = "";
+  const usdToman = marketRates.USD || 0;
+  const gramOz = 31.1035;
+  const est18 = xau ? Math.round(xau * usdToman / gramOz * 0.75) : null;
+  box.appendChild(makeCard('gold', '🥇', 'طلا (XAU) — هر اونس', 'USD', xau? '$'+fmt(xau) : '—',
+    est18 ? 'تخمین هر گرم ۱۸ عیار: '+fmt(est18)+' تومان' : null,
+    xau? ()=> insertNumber(String(xau)) : null, null));
+  box.appendChild(makeCard('gold', '🥈', 'نقره (XAG) — هر اونس', 'USD', xag? '$'+fmt(xag) : '—', null,
+    xag? ()=> insertNumber(String(xag)) : null, null));
+}
+
+const CRYPTOS = [
+  {id:'bitcoin', code:'BTC', name:'بیت‌کوین', flag:'🟠'},
+  {id:'ethereum', code:'ETH', name:'اتریوم', flag:'🔷'},
+  {id:'tether', code:'USDT', name:'تتر', flag:'💵'},
+  {id:'binancecoin', code:'BNB', name:'بایننس کوین', flag:'🟡'},
+  {id:'ripple', code:'XRP', name:'ریپل', flag:'💠'},
+  {id:'dogecoin', code:'DOGE', name:'دوج‌کوین', flag:'🐕'},
+  {id:'solana', code:'SOL', name:'سولانا', flag:'🟣'},
+];
+
+function renderCryptoCards(prices){
+  const box = document.getElementById('cryptoCards');
+  box.innerHTML = "";
+  const usdToman = marketRates.USD || 0;
+  CRYPTOS.forEach(c=>{
+    const p = prices && prices[c.id] ? prices[c.id].usd : null;
+    const tomanVal = p ? Math.round(p * usdToman) : null;
+    box.appendChild(makeCard('crypto', c.flag, c.name, c.code, p? '$'+fmt(p) : '—',
+      tomanVal? '≈ '+fmt(tomanVal)+' تومان' : null,
+      p? ()=> insertNumber(String(p)) : null, null));
+  });
+}
+
+/* ---------------- Fetchers ---------------- */
+async function fetchGlobalRates(){
+  document.getElementById('globalUpdated').textContent = 'در حال دریافت...';
+  try{
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    const data = await res.json();
+    if(data && data.rates){
+      renderGlobalCards(data.rates, 'USD');
+      document.getElementById('globalUpdated').textContent = 'بروزرسانی: ' + new Date().toLocaleTimeString('fa-IR');
+    } else throw new Error('no rates');
+  }catch(err){
+    document.getElementById('globalUpdated').textContent = 'خطا در دریافت — دوباره تلاش کنید';
+    renderGlobalCards(null, 'USD');
+  }
+}
+
+async function fetchGoldRates(){
+  document.getElementById('goldUpdated').textContent = 'در حال دریافت...';
+  try{
+    const [rXau, rXag] = await Promise.all([
+      fetch('https://api.gold-api.com/price/XAU'),
+      fetch('https://api.gold-api.com/price/XAG')
+    ]);
+    const dXau = await rXau.json();
+    const dXag = await rXag.json();
+    const xau = dXau && (dXau.price ?? dXau.Price);
+    const xag = dXag && (dXag.price ?? dXag.Price);
+    renderGoldCards(xau, xag);
+    document.getElementById('goldUpdated').textContent = xau ? 'بروزرسانی: ' + new Date().toLocaleTimeString('fa-IR') : 'داده‌ای دریافت نشد';
+  }catch(err){
+    document.getElementById('goldUpdated').textContent = 'خطا در دریافت — دوباره تلاش کنید';
+    renderGoldCards(null, null);
+  }
+}
+
+async function fetchCryptoRates(){
+  document.getElementById('cryptoUpdated').textContent = 'در حال دریافت...';
+  try{
+    const ids = CRYPTOS.map(c=>c.id).join(',');
+    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
+    const data = await res.json();
+    renderCryptoCards(data);
+    document.getElementById('cryptoUpdated').textContent = 'بروزرسانی: ' + new Date().toLocaleTimeString('fa-IR');
+  }catch(err){
+    document.getElementById('cryptoUpdated').textContent = 'خطا در دریافت — دوباره تلاش کنید';
+    renderCryptoCards(null);
+  }
+}
+
+async function fetchMarketRates(){
+  document.getElementById('marketUpdated').textContent = 'در حال تلاش برای دریافت خودکار...';
+  try{
+    const url = `https://BrsApi.ir/Api/Market/Gold_Currency_Pro.php?key=${encodeURIComponent(apiKey)}&section=currency`;
+    const res = await fetch(url);
+    const data = await res.json();
+    let list = data.currency || data.Currency || data;
+    if(Array.isArray(list)){
+      list.forEach(item=>{
+        const sym = (item.symbol || item.code || item.name_en || '').toUpperCase();
+        const price = item.price ?? item.sell ?? item.value;
+        const match = CURRENCIES.find(c=> sym.includes(c.code));
+        if(match && price){ marketRates[match.code] = Number(price); }
+      });
+      renderMarketCards();
+      renderGoldCards(null,null); // refresh toman estimate placeholders
+      fetchGoldRates();
+      fetchCryptoRates();
+      document.getElementById('marketUpdated').textContent = 'دریافت شد — روی هر ردیف بزنید';
+      saveState();
+    } else throw new Error('unexpected schema');
+  }catch(err){
+    document.getElementById('marketUpdated').textContent = 'دریافت خودکار ناموفق بود؛ نرخ‌ها را دستی ویرایش کنید (دوبار لمس روی عدد)';
+  }
+}
+
+/* ---------------- Settings ---------------- */
+function openSettings(){
+  document.getElementById('overlay').classList.add('on');
+  document.getElementById('apiKeyInput').value = apiKey === "FreeSV0E1LSgB9RDjuf0QorSLViX8pPG" ? "" : apiKey;
+}
+function closeSettings(){ document.getElementById('overlay').classList.remove('on'); }
+function saveApiKey(){
+  const v = document.getElementById('apiKeyInput').value.trim();
+  if(v) apiKey = v;
+  closeSettings();
+  saveState();
+  fetchMarketRates();
+}
+
+/* ---------------- Init ---------------- */
+async function init(){
+  const saved = await loadState();
+  if(saved){
+    if(saved.marketRates) marketRates = Object.assign(marketRates, saved.marketRates);
+    if(saved.goldIran) goldIran = Object.assign(goldIran, saved.goldIran);
+    if(saved.apiKey) apiKey = saved.apiKey;
+  }
+  render();
+  renderMarketCards();
+  renderGoldIranCards();
+  renderGlobalCards(null, 'USD');
+  renderGoldCards(null, null);
+  renderCryptoCards(null);
+  fetchGlobalRates();
+  fetchGoldRates();
+  fetchCryptoRates();
+}
+init();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
