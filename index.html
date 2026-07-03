@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
+  :root[data-theme="dark"] {
     --bg:#0B1210;
     --bg2:#0E1614;
     --surface:#141F1C;
@@ -28,25 +28,50 @@
     --text:#EFEBE1;
     --muted:#889592;
     --danger:#E2664B;
+    --screen-bg: linear-gradient(160deg, #101B18 0%, #0A1412 100%);
+    --screen-text: var(--amber);
+  }
+  :root[data-theme="light"] {
+    --bg:#F4F7F6;
+    --bg2:#EAF0EE;
+    --surface:#FFFFFF;
+    --surface2:#E4ECE9;
+    --line: rgba(20,32,27,0.08);
+    --amber:#D98200;
+    --teal:#2D8A7E;
+    --rust:#B54B32;
+    --gold:#A68122;
+    --violet:#6655B3;
+    --sky:#337FA6;
+    --text:#14201B;
+    --muted:#62726E;
+    --danger:#C4452B;
+    --screen-bg: linear-gradient(160deg, #1E332D 0%, #11221E 100%);
+    --screen-text: #F2A93B;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{height:100%;}
   body{
     margin:0;
-    background:
-      radial-gradient(900px 500px at 15% -8%, rgba(217,178,76,0.05), transparent 60%),
-      radial-gradient(900px 600px at 100% 0%, rgba(89,195,180,0.05), transparent 55%),
-      linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
+    background: var(--bg);
     color:var(--text);
     font-family:'Vazirmatn', sans-serif;
     display:flex; justify-content:center;
     min-height:100vh;
+    transition: background 0.3s, color 0.3s;
+  }
+  :root[data-theme="dark"] body {
+    background:
+      radial-gradient(900px 500px at 15% -8%, rgba(217,178,76,0.05), transparent 60%),
+      radial-gradient(900px 600px at 100% 0%, rgba(89,195,180,0.05), transparent 55%),
+      linear-gradient(180deg, var(--bg2) 0%, var(--bg) 100%);
   }
   #app{
     width:100%; max-width:460px; min-height:100vh;
     display:flex; flex-direction:column;
     position:relative;
-    box-shadow: 0 0 70px rgba(0,0,0,0.55);
+    box-shadow: 0 0 70px rgba(0,0,0,0.25);
+    background: var(--bg);
   }
 
   /* ---- Top bar ---- */
@@ -57,17 +82,18 @@
   .brand{ display:flex; align-items:center; gap:9px; }
   .brand .mark{
     width:30px; height:30px; border-radius:9px;
-    background:linear-gradient(135deg, var(--amber), var(--gold));
+    background:linear-gradient(135deg, #F2A93B, #D9B24C);
     display:flex; align-items:center; justify-content:center;
     font-size:15px; box-shadow:0 4px 14px rgba(217,178,76,0.25);
   }
   header h1{ font-size:14.5px; font-weight:700; margin:0; letter-spacing:.2px; color:var(--muted); }
   header h1 b{ color:var(--text); font-weight:800; display:block; font-size:15.5px; margin-top:1px;}
-  #settingsBtn{
+  .header-actions { display:flex; gap:8px; }
+  .circle-btn{
     width:34px; height:34px; border-radius:50%;
     background:var(--surface2); border:1px solid var(--line);
-    color:var(--muted); display:flex; align-items:center; justify-content:center;
-    font-size:16px; cursor:pointer;
+    color:var(--text); display:flex; align-items:center; justify-content:center;
+    font-size:16px; cursor:pointer; user-select:none;
   }
 
   /* ---- LCD display ---- */
@@ -77,9 +103,9 @@
     padding:20px 18px 16px;
     background:
       repeating-linear-gradient(180deg, rgba(0,0,0,0.14) 0px, rgba(0,0,0,0.14) 1px, transparent 1px, transparent 3px),
-      linear-gradient(160deg, #101B18 0%, #0A1412 100%);
+      var(--screen-bg);
     border:1px solid rgba(242,169,59,0.14);
-    box-shadow: inset 0 0 34px rgba(0,0,0,0.6), 0 10px 26px rgba(0,0,0,0.4);
+    box-shadow: inset 0 0 34px rgba(0,0,0,0.6), 0 10px 26px rgba(0,0,0,0.2);
     position:relative; overflow:hidden;
   }
   #screen::before{
@@ -91,19 +117,20 @@
   #expr{
     direction:ltr; text-align:left;
     font-family:'IBM Plex Mono', monospace;
-    font-size:14.5px; color:var(--muted);
+    font-size:14.5px; color:#889592;
     min-height:18px; letter-spacing:.5px;
     white-space:nowrap; overflow-x:auto; position:relative;
   }
+  :root[data-theme="light"] #expr { color: #A4B3AF; }
   #result{
     direction:ltr; text-align:left;
     font-family:'IBM Plex Mono', monospace;
-    font-size:38px; font-weight:600; color:var(--amber);
+    font-size:38px; font-weight:600; color:var(--screen-text);
     text-shadow: 0 0 20px rgba(242,169,59,0.32);
     margin-top:6px; white-space:nowrap; overflow-x:auto; position:relative;
   }
   #memChip{
-    display:inline-block; margin-top:8px; font-size:10.5px; color:var(--teal);
+    display:inline-block; margin-top:8px; font-size:10.5px; color:#59C3B4;
     border:1px solid rgba(89,195,180,0.35); padding:2px 9px; border-radius:20px;
     font-family:'IBM Plex Mono', monospace; visibility:hidden; position:relative;
   }
@@ -143,12 +170,12 @@
     font-family:'IBM Plex Mono', monospace; font-size:19px; font-weight:500;
     display:flex; align-items:center; justify-content:center;
     cursor:pointer; user-select:none;
-    box-shadow: 0 2px 0 rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.04);
     transition: transform .06s ease, background .15s, box-shadow .1s;
   }
-  .key:active{ transform:translateY(1px) scale(0.96); background:#26332F; box-shadow:none; }
+  .key:active{ transform:translateY(1px) scale(0.96); background:var(--surface); box-shadow:none; }
   .key.op{ background:rgba(242,169,59,0.10); color:var(--amber); border-color:rgba(242,169,59,0.25); }
-  .key.eq{ background:linear-gradient(135deg, var(--amber), var(--gold)); color:#14201B; font-weight:700; border-color:transparent; box-shadow:0 3px 14px rgba(217,178,76,0.35), inset 0 1px 0 rgba(255,255,255,0.25); }
+  .key.eq{ background:linear-gradient(135deg, #F2A93B, #D9B24C); color:#14201B; font-weight:700; border-color:transparent; box-shadow:0 3px 14px rgba(217,178,76,0.35), inset 0 1px 0 rgba(255,255,255,0.25); }
   .key.fn{ background:rgba(89,195,180,0.08); color:var(--teal); font-size:13.5px; border-color:rgba(89,195,180,0.2); }
   .key.danger{ color:var(--danger); }
 
@@ -174,7 +201,8 @@
     border:1px solid var(--line); color:var(--muted); background:var(--surface);
   }
   .subtab .dot{ width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.5; }
-  .subtab.on{ color:#14201B; }
+  .subtab.on{ color: white; }
+  :root[data-theme="light"] .subtab.on { color: #FFFFFF; }
   .subtab.on .dot{ opacity:0; }
   .subtab.on[data-c="market"]{ background:var(--rust); border-color:var(--rust); }
   .subtab.on[data-c="global"]{ background:var(--teal); border-color:var(--teal); }
@@ -190,10 +218,10 @@
     padding:12px 14px; cursor:pointer; border-right:3px solid transparent;
   }
   .rate-card:active{ background:var(--surface2); }
-  .rate-card.market{ border-right-color: rgba(211,104,76,0.6); }
-  .rate-card.global{ border-right-color: rgba(89,195,180,0.6); }
-  .rate-card.gold{ border-right-color: rgba(217,178,76,0.6); }
-  .rate-card.crypto{ border-right-color: rgba(156,141,224,0.6); }
+  .rate-card.market{ border-right-color: var(--rust); }
+  .rate-card.global{ border-right-color: var(--teal); }
+  .rate-card.gold{ border-right-color: var(--gold); }
+  .rate-card.crypto{ border-right-color: var(--violet); }
   .rate-left{ display:flex; align-items:center; gap:10px; }
   .flag{ font-size:19px; width:26px; text-align:center; }
   .rname{ font-size:13.5px; font-weight:600; }
@@ -252,7 +280,7 @@
   .btn-primary{
     width:100%; padding:13px 0; border-radius:12px; border:none; cursor:pointer;
     font-weight:700; font-size:14px; margin-bottom:16px;
-    background:linear-gradient(135deg, var(--amber), var(--gold)); color:#14201B;
+    background:linear-gradient(135deg, #F2A93B, #D9B24C); color:#14201B;
   }
   .result-box{
     background:var(--surface); border:1px solid var(--line); border-radius:16px;
@@ -271,7 +299,7 @@
   }
   .gauge .ptr{
     position:absolute; top:-5px; width:3px; height:20px; background:var(--text);
-    border-radius:2px; transform:translateX(50%); box-shadow:0 0 8px rgba(0,0,0,0.5);
+    border-radius:2px; transform:translateX(50%); box-shadow:0 0 8px rgba(0,0,0,0.3);
   }
   .gauge-labels{ display:flex; justify-content:space-between; font-size:9.5px; color:var(--muted); direction:ltr; margin-bottom:4px;}
 
@@ -281,7 +309,8 @@
     flex:0 0 auto; padding:8px 13px; border-radius:20px; font-size:11.5px; font-weight:700;
     border:1px solid var(--line); color:var(--muted); background:var(--surface); cursor:pointer; white-space:nowrap;
   }
-  .chip.on{ background:var(--violet); border-color:var(--violet); color:#181428; }
+  .chip.on{ background:var(--violet); border-color:var(--violet); color:white; }
+  :root[data-theme="light"] .chip.on { color: #FFFFFF; }
 
   .age-stats{ display:flex; gap:8px; margin-top:14px; }
   .age-stat{ flex:1; background:var(--surface2); border-radius:12px; padding:10px 6px; text-align:center; }
@@ -300,16 +329,10 @@
   }
   #sheet h3{ margin:0 0 10px; font-size:14px; color:var(--amber); }
   #sheet p{ font-size:12px; color:var(--muted); line-height:1.9; margin:0 0 12px;}
-  #sheet input{
-    width:100%; direction:ltr; text-align:left; background:var(--surface2); color:var(--text);
-    border:1px solid var(--line); border-radius:10px; padding:11px 12px; font-family:'IBM Plex Mono',monospace;
-    font-size:13px; margin-bottom:12px;
-  }
   #sheet .row2{ display:flex; gap:10px; }
   #sheet button.act{
     flex:1; padding:11px 0; border-radius:10px; border:none; font-weight:700; font-size:13px; cursor:pointer;
   }
-  #sheet .save{ background:var(--amber); color:#141B1A; }
   #sheet .close{ background:var(--surface2); color:var(--muted); border:1px solid var(--line); }
 </style>
 </head>
@@ -321,7 +344,10 @@
       <div class="mark">🧮</div>
       <h1>محاسبه‌گر مالی<b>ارز · طلا · کریپتو</b></h1>
     </div>
-    <div id="settingsBtn" onclick="openSettings()">⚙</div>
+    <div class="header-actions">
+      <div class="circle-btn" id="themeBtn" onclick="toggleTheme()">🌓</div>
+      <div class="circle-btn" id="settingsBtn" onclick="openSettings()">ℹ️</div>
+    </div>
   </header>
 
   <div id="screen">
@@ -408,18 +434,17 @@
         <div class="subtab" data-c="crypto" id="tab-crypto" onclick="showRateList('crypto')"><span class="dot"></span>◈ کریپتو</div>
       </div>
 
-      <!-- MARKET (manual/editable + optional auto fetch) -->
+      <!-- MARKET (manual/editable) -->
       <div class="ratelist market on" id="list-market">
         <div class="statusrow">
-          <span class="updated" id="marketUpdated">نرخ‌های مرجع: ۱۳ تیر ۱۴۰۵ — لمس=وارد ماشین‌حساب / دوبار لمس=ویرایش</span>
-          <button class="refresh" onclick="fetchMarketRates()">↻ خودکار</button>
+          <span class="updated" id="marketUpdated">لمس = وارد به ماشین‌حساب / دوبار لمس = ویرایش سریع عدد</span>
         </div>
         <div class="section-label">ارزها (تومان)</div>
         <div id="marketCards"></div>
         <div class="section-label">طلا و سکه داخلی (تومان)</div>
         <div id="goldIranCards"></div>
         <div class="hint">
-          نرخ‌های این بخش بر پایهٔ آخرین قیمت‌های ثبت‌شده تا ۱۳ تیر ۱۴۰۵ تنظیم شده‌اند و از آن به بعد دستی بروزرسانی نشده‌اند. چون بازار آزاد هر روز نوسان دارد، بهتر است هر روز با یه نگاه به سایتی مثل tgju.org یا alanchand.com عدد رو با دوبار لمس روی ردیف اصلاح کنی. دکمه «دریافت خودکار» هم می‌تونی امتحان کنی، ولی چون سرویس‌های خارجی گاهی از داخل ایران در دسترس نیستن ممکنه جواب نده.
+          به دلیل نوسانات روزانه بازار آزاد، می‌توانید نرخ‌های این بخش را با دوبار لمس روی قیمت هر ردیف، به صورت دستی و کاملاً دقیق بروزرسانی کنید. عدد جدید روی همین دستگاه ذخیره می‌ماند.
         </div>
       </div>
 
@@ -440,7 +465,7 @@
           <button class="refresh" onclick="fetchGoldRates()">↻ بروزرسانی</button>
         </div>
         <div id="goldCards"></div>
-        <div class="hint">قیمت جهانی هر اونس طلا/نقره به دلار (منبع: gold-api.com). معادل تومانیِ هر گرم ۱۸ عیار صرفاً «تخمینی» و بر پایهٔ نرخ دلار بخش بازار آزاد محاسبه شده و شامل اجرت و حباب بازار داخلی نیست.</div>
+        <div class="hint">قیمت جهانی هر اونس طلا/نقره به دلار (منبع: gold-api.com). معادل تومانیِ هر گرم ۱۸ عیار صرفاً «تخمینی» و بر پایهٔ نرخ دلار بخش بازار آزاد محاسبه شده است.</div>
       </div>
 
       <!-- CRYPTO -->
@@ -597,34 +622,43 @@
   </nav>
 </div>
 
-<!-- Settings sheet -->
+<!-- Info sheet -->
 <div id="overlay" onclick="if(event.target===this) closeSettings()">
   <div id="sheet">
-    <h3>کلید API اختصاصی (اختیاری)</h3>
-    <p>برای دریافت پایدارتر نرخ بازار آزاد، می‌توانید کلید رایگان خودتان را از brsapi.ir بگیرید و اینجا وارد کنید. در غیر این‌صورت از کلید نمایشی عمومی استفاده می‌شود که ممکن است محدود باشد.</p>
-    <input id="apiKeyInput" placeholder="مثلاً: xxxxxxxxxxxxxxxxxxxx">
+    <h3>درباره برنامه</h3>
+    <p>این یک وب‌اپلیکیشن آفلاین/آنلاین برای محاسبات مالی روزمره است. مقادیر بخش بازار آزاد به صورت دستی توسط شما قابل تنظیم بوده و روی حافظه مرورگر باقی می‌مانند. نرخ‌های جهانی نیز در صورت اتصال به اینترنت آپدیت می‌شوند.</p>
     <div class="row2">
       <button class="act close" onclick="closeSettings()">بستن</button>
-      <button class="act save" onclick="saveApiKey()">ذخیره</button>
     </div>
   </div>
 </div>
 
 <script>
-/* ---------------- Storage helpers (persist manual edits on this device) ---------------- */
+/* ---------------- Storage helpers ---------------- */
 async function loadState(){
   try{
-    const r = await window.storage.get('state', false);
-    if(r && r.value) return JSON.parse(r.value);
+    const r = localStorage.getItem('state');
+    if(r) return JSON.parse(r);
   }catch(e){}
   return null;
 }
 async function saveState(){
   try{
-    await window.storage.set('state', JSON.stringify({
-      marketRates, goldIran, apiKey
-    }), false);
+    localStorage.setItem('state', JSON.stringify({
+      marketRates, goldIran, theme
+    }));
   }catch(e){}
+}
+
+/* ---------------- Theme Toggle ---------------- */
+let theme = "dark";
+function initTheme(){
+  document.documentElement.setAttribute('data-theme', theme);
+}
+function toggleTheme(){
+  theme = theme === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute('data-theme', theme);
+  saveState();
 }
 
 /* ---------------- Calculator core ---------------- */
@@ -754,9 +788,8 @@ const CURRENCIES = [
   {code:'CNY', name:'یوان چین',    flag:'🇨🇳'},
 ];
 
-let marketRates = { USD: 175000, EUR: 198000, GBP: 223000, AED: 41500, TRY: 4500, CNY: 24300 };
-let goldIran = { gram18: 17460000, bahar: 169600000 };
-let apiKey = "FreeSV0E1LSgB9RDjuf0QorSLViX8pPG";
+let marketRates = { USD: 166000, EUR: 181000, GBP: 212000, AED: 45200, TRY: 4200, CNY: 23100 };
+let goldIran = { gram18: 16500000, bahar: 161000000 };
 
 function makeCard(cls, flag, name, code, valStr, subStr, onTap, onEdit){
   const card = document.createElement('div');
@@ -817,7 +850,6 @@ function renderGlobalCards(rates, base){
   });
 }
 
-// Reference values as of 13 Tir 1405 (Jul 4, 2026) — used as fallback if live fetch fails
 const FALLBACK_GOLD = { xau: 4180, xag: 36.5 };
 const FALLBACK_CRYPTO = {
   bitcoin:{usd:61800}, ethereum:{usd:1715}, tether:{usd:1.00},
@@ -861,7 +893,6 @@ function renderCryptoCards(prices){
 }
 
 /* ---------------- Fetchers ---------------- */
-// Reference values as of 13 Tir 1405 (Jul 4, 2026)
 const FALLBACK_FX = { USD:1, EUR:0.926, GBP:0.787, AED:3.6725, TRY:39.0, CNY:7.17 };
 
 async function fetchGlobalRates(){
@@ -875,7 +906,7 @@ async function fetchGlobalRates(){
     } else throw new Error('no rates');
   }catch(err){
     renderGlobalCards(FALLBACK_FX, 'USD');
-    document.getElementById('globalUpdated').textContent = 'دریافت زنده ناموفق بود — نرخ مرجع ۱۳ تیر ۱۴۰۵ نمایش داده می‌شود';
+    document.getElementById('globalUpdated').textContent = 'خطا در دریافت زنده — نمایش مقادیر پیش‌فرض';
   }
 }
 
@@ -895,7 +926,7 @@ async function fetchGoldRates(){
     document.getElementById('goldUpdated').textContent = 'بروزرسانی زنده: ' + new Date().toLocaleTimeString('fa-IR');
   }catch(err){
     renderGoldCards(FALLBACK_GOLD.xau, FALLBACK_GOLD.xag);
-    document.getElementById('goldUpdated').textContent = 'دریافت زنده ناموفق بود — نرخ مرجع ۱۳ تیر ۱۴۰۵ نمایش داده می‌شود';
+    document.getElementById('goldUpdated').textContent = 'خطا در دریافت زنده — نمایش مقادیر پیش‌فرض';
   }
 }
 
@@ -910,33 +941,7 @@ async function fetchCryptoRates(){
     document.getElementById('cryptoUpdated').textContent = 'بروزرسانی زنده: ' + new Date().toLocaleTimeString('fa-IR');
   }catch(err){
     renderCryptoCards(FALLBACK_CRYPTO);
-    document.getElementById('cryptoUpdated').textContent = 'دریافت زنده ناموفق بود — نرخ مرجع ۱۳ تیر ۱۴۰۵ نمایش داده می‌شود';
-  }
-}
-
-async function fetchMarketRates(){
-  document.getElementById('marketUpdated').textContent = 'در حال تلاش برای دریافت خودکار...';
-  try{
-    const url = `https://BrsApi.ir/Api/Market/Gold_Currency_Pro.php?key=${encodeURIComponent(apiKey)}&section=currency`;
-    const res = await fetch(url);
-    const data = await res.json();
-    let list = data.currency || data.Currency || data;
-    if(Array.isArray(list)){
-      list.forEach(item=>{
-        const sym = (item.symbol || item.code || item.name_en || '').toUpperCase();
-        const price = item.price ?? item.sell ?? item.value;
-        const match = CURRENCIES.find(c=> sym.includes(c.code));
-        if(match && price){ marketRates[match.code] = Number(price); }
-      });
-      renderMarketCards();
-      renderGoldCards(FALLBACK_GOLD.xau, FALLBACK_GOLD.xag); // refresh toman estimate placeholders
-      fetchGoldRates();
-      fetchCryptoRates();
-      document.getElementById('marketUpdated').textContent = 'دریافت شد — روی هر ردیف بزنید';
-      saveState();
-    } else throw new Error('unexpected schema');
-  }catch(err){
-    document.getElementById('marketUpdated').textContent = 'دریافت خودکار ناموفق بود؛ نرخ‌ها را دستی ویرایش کنید (دوبار لمس روی عدد)';
+    document.getElementById('cryptoUpdated').textContent = 'خطا در دریافت زنده — نمایش مقادیر پیش‌فرض';
   }
 }
 
@@ -1061,19 +1066,9 @@ function calcDiscount(){
   box.classList.add('on');
 }
 
-/* ---------------- Settings ---------------- */
-function openSettings(){
-  document.getElementById('overlay').classList.add('on');
-  document.getElementById('apiKeyInput').value = apiKey === "FreeSV0E1LSgB9RDjuf0QorSLViX8pPG" ? "" : apiKey;
-}
+/* ---------------- Info Modal ---------------- */
+function openSettings(){ document.getElementById('overlay').classList.add('on'); }
 function closeSettings(){ document.getElementById('overlay').classList.remove('on'); }
-function saveApiKey(){
-  const v = document.getElementById('apiKeyInput').value.trim();
-  if(v) apiKey = v;
-  closeSettings();
-  saveState();
-  fetchMarketRates();
-}
 
 /* ---------------- Init ---------------- */
 async function init(){
@@ -1081,8 +1076,9 @@ async function init(){
   if(saved){
     if(saved.marketRates) marketRates = Object.assign(marketRates, saved.marketRates);
     if(saved.goldIran) goldIran = Object.assign(goldIran, saved.goldIran);
-    if(saved.apiKey) apiKey = saved.apiKey;
+    if(saved.theme) theme = saved.theme;
   }
+  initTheme();
   render();
   renderMarketCards();
   renderGoldIranCards();
