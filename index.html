@@ -292,7 +292,6 @@
   }
   .result-box.on{ display:block; }
   
-  /* اصلاح ساختار نمایش سن به صورت تکه‌تکه جهت جلوگیری از بهم‌ریختگی RTL */
   .result-big{ font-family:'Vazirmatn', sans-serif; font-size:26px; font-weight:700; display:flex; justify-content:center; align-items:center; gap:5px; margin-bottom:4px; }
   .result-big span { font-family:'IBM Plex Mono', monospace; font-size:32px; color:var(--amber); }
   
@@ -365,7 +364,6 @@
     </div>
   </header>
 
-  <!-- Main Scrollable Wrapper -->
   <div class="main-content">
     
     <div id="screen">
@@ -531,6 +529,7 @@
           <div class="result-box" id="bmiResult">
             <div class="result-big-bmi" id="bmiValue" style="font-family:'IBM Plex Mono'; font-size:32px; font-weight:700;">--</div>
             <div class="result-tag" id="bmiTag">--</div>
+            <div class="result-sub" id="bmiAdvice" style="margin: 10px 0; font-weight: 500;"></div>
             <div class="gauge-labels"><span>کم‌وزن</span><span>طبیعی</span><span>اضافه‌وزن</span><span>چاق</span></div>
             <div class="gauge"><div class="ptr" id="bmiPtr" style="left:0%"></div></div>
           </div>
@@ -553,7 +552,6 @@
           <button class="btn-primary" onclick="calcAgeShamsi()">محاسبه سن دقیق</button>
           <div class="result-box" id="ageResultBox">
             <div class="result-big" id="ageMain">
-              <!-- ساختار ساختاریافته برای ثبات چیدمان -->
               <span id="resYear">--</span> سال و <span id="resMonth">--</span> ماه و <span id="resDay">--</span> روز
             </div>
             <div style="font-size:11px; color:var(--muted); margin-top:4px;">سن دقیق شما بر اساس تقویم خورشیدی</div>
@@ -620,9 +618,8 @@
       </div>
     </div>
 
-  </div> <!-- End of Scrollable Main Content -->
+  </div>
 
-  <!-- Fixed Bottom Nav -->
   <nav>
     <button class="active" id="nav-calc" onclick="switchView('calc')">
       <span class="ic">🧮</span> ماشین‌حساب
@@ -655,7 +652,6 @@
 </div>
 
 <script>
-/* --- Core Storage & Theme --- */
 let theme = "dark";
 let marketRates = { USD: 166000, EUR: 181000, GBP: 212000, AED: 45200, TRY: 4200, AZN: 103000, CNY: 23100 };
 let goldIran = { gram18: 16500000, bahar: 161000000 };
@@ -826,16 +822,43 @@ function openTool(name){ document.getElementById('toolsHome').style.display='non
 function closeTool(){ document.getElementById('toolsHome').style.display='block'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); }
 function numOf(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; }
 
+/* توسعه تابع محاسبه BMI جهت ارائه راهنمای دقیق اضافه وزن و کاهش آن */
 function calcBMI(){
   const hCm = numOf('bmiHeight'), w = numOf('bmiWeight'), box = document.getElementById('bmiResult');
   if(!hCm || !w || hCm<=0 || w<=0){ box.classList.remove('on'); alert('قد و وزن را درست وارد کنید.'); return; }
-  const h = hCm/100, bmi = w/(h*h); document.getElementById('bmiValue').textContent = bmi.toFixed(1);
+  
+  const h = hCm/100, bmi = w/(h*h);
+  document.getElementById('bmiValue').textContent = bmi.toFixed(1);
+  
   let tag, color, pct;
-  if(bmi < 18.5){ tag='کم‌وزن'; color='var(--sky)'; pct = (bmi-12)/(18.5-12)*25; }
-  else if(bmi < 25){ tag='طبیعی'; color='var(--teal)'; pct = 25 + (bmi-18.5)/(25-18.5)*30; }
-  else if(bmi < 30){ tag='اضافه‌وزن'; color='var(--gold)'; pct = 55 + (bmi-25)/(30-25)*25; }
-  else { tag='چاق'; color='var(--danger)'; pct = 80 + (bmi-30)/(40-30)*20; }
+  let adviceText = "";
+  
+  // محاسبه سقف وزن نرمال (BMI = 24.9)
+  const maxNormalWeight = 24.9 * (h * h);
+  
+  if(bmi < 18.5){
+    tag='کم‌وزن'; color='var(--sky)'; pct = (bmi-12)/(18.5-12)*25;
+    const minNormalWeight = 18.5 * (h * h);
+    const weightNeed = Math.ceil(minNormalWeight - w);
+    adviceText = `شما به افزایش حداقل <span style="color:var(--sky); font-weight:700;">${weightNeed} کیلوگرم</span> برای رسیدن به محدوده نرمال نیاز دارید.`;
+  }
+  else if(bmi < 25){
+    tag='طبیعی'; color='var(--teal)'; pct = 25 + (bmi-18.5)/(25-18.5)*30;
+    adviceText = `شاخص شما فوق‌العاده و در محدوده <span style="color:var(--teal); font-weight:700;">کاملاً طبیعی</span> قرار دارد. مراقب حفظ آن باشید!`;
+  }
+  else if(bmi < 30){
+    tag='اضافه‌وزن'; color='var(--gold)'; pct = 55 + (bmi-25)/(30-25)*25;
+    const weightToLose = Math.ceil(w - maxNormalWeight);
+    adviceText = `شما حدود <span style="color:var(--gold); font-weight:700;">${weightToLose} کیلوگرم</span> اضافه وزن دارید و باید برای رسیدن به وزن ایده‌آل لاغر شوید.`;
+  }
+  else {
+    tag='چاق'; color='var(--danger)'; pct = 80 + (bmi-30)/(40-30)*20;
+    const weightToLose = Math.ceil(w - maxNormalWeight);
+    adviceText = `شما حدود <span style="color:var(--danger); font-weight:700;">${weightToLose} کیلوگرم</span> وزن اضافی دارید و برای رسیدن به مرز نرمال باید لاغر شوید.`;
+  }
+  
   const tEl = document.getElementById('bmiTag'); tEl.textContent = tag; tEl.style.background = color; tEl.style.color = '#12201C';
+  document.getElementById('bmiAdvice').innerHTML = adviceText;
   document.getElementById('bmiPtr').style.left = Math.max(0,Math.min(100,pct))+'%'; box.classList.add('on');
 }
 
@@ -874,7 +897,6 @@ function calcAgeShamsi(){
   let targetY = (curM > jm || (curM === jm && curD >= jd)) ? curY + 1 : curY;
   const gN = shamsiToGregorian(targetY, jm, jd), nextB = new Date(gN[0], gN[1] - 1, gN[2]);
   
-  // تزریق مقادیر به صورت جداگانه در تگ‌ها برای تضمین ثبات چیدمان
   document.getElementById('resYear').textContent = dY;
   document.getElementById('resMonth').textContent = dM;
   document.getElementById('resDay').textContent = dD;
