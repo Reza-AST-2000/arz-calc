@@ -66,7 +66,7 @@
     background: var(--bg);
   }
 
-  /* ---- Header (Fixed Top) ---- */
+  /* ---- Header ---- */
   header{
     display:flex; align-items:center; justify-content:space-between;
     padding:16px 18px 8px;
@@ -89,7 +89,7 @@
     font-size:16px; cursor:pointer; user-select:none;
   }
 
-  /* ---- Main Scrollable Content Container ---- */
+  /* ---- Main Content Container ---- */
   .main-content {
     flex: 1;
     overflow-y: auto;
@@ -138,7 +138,7 @@
     font-family:'IBM Plex Mono', monospace; visibility:hidden; position:relative;
   }
 
-  /* ---- Tabs (Fixed Bottom Nav) ---- */
+  /* ---- Tabs ---- */
   nav{
     flex-shrink: 0;
     display:flex; border-top:1px solid var(--line);
@@ -163,9 +163,7 @@
   .view.active { display:flex; }
 
   /* ---- Keypad ---- */
-  #keypad{
-    padding:0 14px 14px; display:flex; flex-direction:column; gap:8px;
-  }
+  #keypad{ padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; }
   .row{ display:flex; gap:8px; }
   .key{
     flex:1; aspect-ratio:1.45/1;
@@ -194,10 +192,7 @@
 
   /* ---- Rates view ---- */
   #ratesArea{ padding:2px 16px 16px; }
-  .subtabs{
-    display:flex; gap:7px; margin:6px 0 14px; overflow-x:auto; padding-bottom:2px;
-    scrollbar-width:none;
-  }
+  .subtabs{ display:flex; gap:7px; margin:6px 0 14px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
   .subtabs::-webkit-scrollbar{ display:none; }
   .subtab{
     flex:0 0 auto; display:flex; align-items:center; gap:6px;
@@ -251,7 +246,7 @@
 
   /* ---- Tools view ---- */
   #toolsArea{ padding:8px 16px 16px; }
-  .tool-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .tool-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .tool-card{
     background:var(--surface); border:1px solid var(--line); border-radius:16px;
     padding:16px 14px; cursor:pointer; text-align:center;
@@ -280,35 +275,53 @@
   }
   .field::placeholder{ color:var(--muted); opacity:.6; }
   .field-row{ display:flex; gap:10px; }
-  .field-row .field{ flex:1; }
+  .field-row > div { flex:1; }
   .btn-primary{
     width:100%; padding:13px 0; border-radius:12px; border:none; cursor:pointer;
     font-weight:700; font-size:14px; margin-bottom:16px;
     background:linear-gradient(135deg, #F2A93B, #D9B24C); color:#14201B;
   }
+  
+  /* ---- Result Box Base ---- */
   .result-box{
     background:var(--surface); border:1px solid var(--line); border-radius:16px;
     padding:18px; text-align:center; display:none;
   }
   .result-box.on{ display:block; }
   
-  .result-big{ font-family:'Vazirmatn', sans-serif; font-size:26px; font-weight:700; display:flex; justify-content:center; align-items:center; gap:5px; margin-bottom:4px; }
-  .result-big span { font-family:'IBM Plex Mono', monospace; font-size:32px; color:var(--amber); }
-  
-  .result-sub{ font-size:12px; color:var(--muted); margin-top:6px; line-height:1.9; }
+  /* ---- BMI Result Specifics ---- */
+  .result-big-bmi {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
   .result-tag{
-    display:inline-block; margin-top:10px; padding:4px 14px; border-radius:20px;
-    font-size:12px; font-weight:700;
+    display:inline-block; padding:5px 16px; border-radius:20px;
+    font-size:13px; font-weight:700; margin-bottom:10px;
+  }
+  .result-advice-text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.8;
+    margin: 12px 0 6px;
+    background: rgba(255,255,255,0.02);
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px dashed var(--line);
   }
 
+  /* ---- Gauge element ---- */
   .gauge{ height:10px; border-radius:6px; margin:16px 2px 6px; position:relative;
     background:linear-gradient(90deg, var(--sky) 0%, var(--teal) 28%, var(--gold) 60%, var(--danger) 100%);
   }
   .gauge .ptr{
     position:absolute; top:-5px; width:3px; height:20px; background:var(--text);
     border-radius:2px; transform:translateX(50%); box-shadow:0 0 8px rgba(0,0,0,0.3);
+    transition: left 0.4s ease-out;
   }
-  .gauge-labels{ display:flex; justify-content:space-between; font-size:9.5px; color:var(--muted); direction:ltr; margin-bottom:4px;}
+  .gauge-labels{ display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-bottom:4px; margin-top:14px; }
 
   .chip-row{ display:flex; gap:7px; margin-bottom:16px; overflow-x:auto; scrollbar-width:none;}
   .chip-row::-webkit-scrollbar{ display:none; }
@@ -518,18 +531,21 @@
           <div class="field-row">
             <div>
               <div class="field-label">قد (سانتی‌متر)</div>
-              <input class="field" id="bmiHeight" type="number" placeholder="175">
+              <input class="field" id="bmiHeight" type="number" placeholder="144">
             </div>
             <div>
               <div class="field-label">وزن (کیلوگرم)</div>
-              <input class="field" id="bmiWeight" type="number" placeholder="70">
+              <input class="field" id="bmiWeight" type="number" placeholder="90">
             </div>
           </div>
           <button class="btn-primary" onclick="calcBMI()">محاسبه BMI</button>
+          
           <div class="result-box" id="bmiResult">
-            <div class="result-big-bmi" id="bmiValue" style="font-family:'IBM Plex Mono'; font-size:32px; font-weight:700;">--</div>
+            <div class="result-big-bmi" id="bmiValue">--</div>
             <div class="result-tag" id="bmiTag">--</div>
-            <div class="result-sub" id="bmiAdvice" style="margin: 10px 0; font-weight: 500;"></div>
+            <!-- بخش محاسبه زنده کیلوگرم‌های اضافی و هدف لاغری -->
+            <div class="result-advice-text" id="bmiAdvice"></div>
+            
             <div class="gauge-labels"><span>کم‌وزن</span><span>طبیعی</span><span>اضافه‌وزن</span><span>چاق</span></div>
             <div class="gauge"><div class="ptr" id="bmiPtr" style="left:0%"></div></div>
           </div>
@@ -551,8 +567,8 @@
           </div>
           <button class="btn-primary" onclick="calcAgeShamsi()">محاسبه سن دقیق</button>
           <div class="result-box" id="ageResultBox">
-            <div class="result-big" id="ageMain">
-              <span id="resYear">--</span> سال و <span id="resMonth">--</span> ماه و <span id="resDay">--</span> روز
+            <div class="result-big" style="font-size:20px; font-weight:700;" id="ageMain">
+              <span id="resYear" style="color:var(--amber);">--</span> سال و <span id="resMonth" style="color:var(--amber);">--</span> ماه و <span id="resDay" style="color:var(--amber);">--</span> روز
             </div>
             <div style="font-size:11px; color:var(--muted); margin-top:4px;">سن دقیق شما بر اساس تقویم خورشیدی</div>
             <div class="age-stats">
@@ -742,7 +758,7 @@ function showRateList(which){
   });
 }
 
-/* --- Financial & Render Lists --- */
+/* --- Financial Lists --- */
 const CURRENCIES = [
   {code:'USD', name:'دلار آمریکا', flag:'🇺🇸'}, {code:'EUR', name:'یورو', flag:'🇪🇺'},
   {code:'GBP', name:'پوند انگلیس', flag:'🇬🇧'}, {code:'AED', name:'درهم امارات', flag:'🇦🇪'},
@@ -822,7 +838,7 @@ function openTool(name){ document.getElementById('toolsHome').style.display='non
 function closeTool(){ document.getElementById('toolsHome').style.display='block'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); }
 function numOf(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; }
 
-/* توسعه تابع محاسبه BMI جهت ارائه راهنمای دقیق اضافه وزن و کاهش آن */
+/* اصلاح کامل و بررسی منطق نمایش خروجی اضافه وزن */
 function calcBMI(){
   const hCm = numOf('bmiHeight'), w = numOf('bmiWeight'), box = document.getElementById('bmiResult');
   if(!hCm || !w || hCm<=0 || w<=0){ box.classList.remove('on'); alert('قد و وزن را درست وارد کنید.'); return; }
@@ -833,33 +849,39 @@ function calcBMI(){
   let tag, color, pct;
   let adviceText = "";
   
-  // محاسبه سقف وزن نرمال (BMI = 24.9)
+  // محاسبه سقف مجاز وزن ایده آل و نرمال بر اساس فرمول (BMI = 24.9)
   const maxNormalWeight = 24.9 * (h * h);
   
   if(bmi < 18.5){
-    tag='کم‌وزن'; color='var(--sky)'; pct = (bmi-12)/(18.5-12)*25;
+    tag='کم‌وزن'; color='#59C3B4'; pct = (bmi-12)/(18.5-12)*25;
     const minNormalWeight = 18.5 * (h * h);
     const weightNeed = Math.ceil(minNormalWeight - w);
-    adviceText = `شما به افزایش حداقل <span style="color:var(--sky); font-weight:700;">${weightNeed} کیلوگرم</span> برای رسیدن به محدوده نرمال نیاز دارید.`;
+    adviceText = `وزن هدف شما باید حداقل افزایش یابد. شما نیاز به افزایش <b style="color:var(--sky); font-size:15px;">${weightNeed} کیلوگرم</b> دارید تا به محدوده وزن طبیعی برسید.`;
   }
   else if(bmi < 25){
-    tag='طبیعی'; color='var(--teal)'; pct = 25 + (bmi-18.5)/(25-18.5)*30;
-    adviceText = `شاخص شما فوق‌العاده و در محدوده <span style="color:var(--teal); font-weight:700;">کاملاً طبیعی</span> قرار دارد. مراقب حفظ آن باشید!`;
+    tag='طبیعی'; color='#2D8A7E'; pct = 25 + (bmi-18.5)/(25-18.5)*30;
+    adviceText = `شاخص توده بدنی شما عالی است! شما در محدوده <b style="color:var(--teal); font-size:15px;">کاملاً طبیعی و ایده آل</b> هستید.`;
   }
   else if(bmi < 30){
-    tag='اضافه‌وزن'; color='var(--gold)'; pct = 55 + (bmi-25)/(30-25)*25;
+    tag='اضافه‌وزن'; color='#F2A93B'; pct = 55 + (bmi-25)/(30-25)*25;
     const weightToLose = Math.ceil(w - maxNormalWeight);
-    adviceText = `شما حدود <span style="color:var(--gold); font-weight:700;">${weightToLose} کیلوگرم</span> اضافه وزن دارید و باید برای رسیدن به وزن ایده‌آل لاغر شوید.`;
+    adviceText = `شما دارای <b style="color:var(--gold); font-size:15px;">${weightToLose} کیلوگرم اضافه وزن</b> هستید. برای رسیدن به تناسب اندام ایده آل باید همین مقدار لاغر شوید.`;
   }
   else {
-    tag='چاق'; color='var(--danger)'; pct = 80 + (bmi-30)/(40-30)*20;
+    tag='چاق'; color='#E2664B'; pct = 80 + (bmi-30)/(40-30)*20;
     const weightToLose = Math.ceil(w - maxNormalWeight);
-    adviceText = `شما حدود <span style="color:var(--danger); font-weight:700;">${weightToLose} کیلوگرم</span> وزن اضافی دارید و برای رسیدن به مرز نرمال باید لاغر شوید.`;
+    adviceText = `شما در وضعیت چاقی قرار دارید و نزدیک به <b style="color:var(--danger); font-size:16px;">${weightToLose} کیلوگرم وزن اضافی</b> دارید که باید با رژیم و ورزش لاغر کنید تا به مرز طبیعی برسید.`;
   }
   
+  // رندر تگ وضعیت چاقی/نرمال دقیقاً زیر باکس عدد
   const tEl = document.getElementById('bmiTag'); tEl.textContent = tag; tEl.style.background = color; tEl.style.color = '#12201C';
+  
+  // تزریق متن به صورت HTML تا مطمئن شویم استایل رنگی اعمال می‌شود
   document.getElementById('bmiAdvice').innerHTML = adviceText;
-  document.getElementById('bmiPtr').style.left = Math.max(0,Math.min(100,pct))+'%'; box.classList.add('on');
+  
+  // جابجایی اسلایدر رنگی
+  document.getElementById('bmiPtr').style.left = Math.max(0,Math.min(100,pct))+'%'; 
+  box.classList.add('on');
 }
 
 /* --- Accurate Shamsi Age Algorithms --- */
