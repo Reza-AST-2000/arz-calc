@@ -10,7 +10,6 @@
 <title>محاسبه‌گر ارز، طلا و کریپتو</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -25,6 +24,7 @@
     --rust:#D3684C;
     --gold:#D9B24C;
     --violet:#9C8DE0;
+    --sky:#6FB1D9;
     --text:#EFEBE1;
     --muted:#889592;
     --danger:#E2664B;
@@ -143,11 +143,12 @@
     font-family:'IBM Plex Mono', monospace; font-size:19px; font-weight:500;
     display:flex; align-items:center; justify-content:center;
     cursor:pointer; user-select:none;
-    transition: transform .06s ease, background .15s;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04);
+    transition: transform .06s ease, background .15s, box-shadow .1s;
   }
-  .key:active{ transform:scale(0.94); background:#26332F; }
+  .key:active{ transform:translateY(1px) scale(0.96); background:#26332F; box-shadow:none; }
   .key.op{ background:rgba(242,169,59,0.10); color:var(--amber); border-color:rgba(242,169,59,0.25); }
-  .key.eq{ background:linear-gradient(135deg, var(--amber), var(--gold)); color:#14201B; font-weight:700; border-color:transparent; }
+  .key.eq{ background:linear-gradient(135deg, var(--amber), var(--gold)); color:#14201B; font-weight:700; border-color:transparent; box-shadow:0 3px 14px rgba(217,178,76,0.35), inset 0 1px 0 rgba(255,255,255,0.25); }
   .key.fn{ background:rgba(89,195,180,0.08); color:var(--teal); font-size:13.5px; border-color:rgba(89,195,180,0.2); }
   .key.danger{ color:var(--danger); }
 
@@ -216,6 +217,77 @@
   .section-label{ font-size:11px; color:var(--muted); margin:14px 2px 8px; display:flex; align-items:center; gap:6px;}
   .section-label::after{ content:""; flex:1; height:1px; background:var(--line); }
 
+  /* ---- Tools view ---- */
+  #toolsArea{ padding:8px 16px 16px; overflow-y:auto; flex:1; }
+  .tool-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .tool-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:16px 14px; cursor:pointer; text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .tool-card:active{ background:var(--surface2); }
+  .tool-card .ticon{
+    width:44px; height:44px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center; font-size:21px;
+  }
+  .tool-card .tname{ font-size:12.5px; font-weight:700; }
+  .tool-card .tdesc{ font-size:10px; color:var(--muted); line-height:1.6; }
+
+  .toolpage{ display:none; flex-direction:column; }
+  .toolpage.on{ display:flex; }
+  .tool-back{
+    display:flex; align-items:center; gap:6px; color:var(--muted);
+    font-size:12.5px; font-weight:600; margin-bottom:14px; cursor:pointer; width:fit-content;
+  }
+  .field-label{ font-size:12px; color:var(--muted); margin:0 2px 6px; font-weight:600;}
+  .field{
+    width:100%; background:var(--surface2); color:var(--text);
+    border:1px solid var(--line); border-radius:12px; padding:12px 14px;
+    font-family:'IBM Plex Mono', monospace; font-size:15px; margin-bottom:14px;
+    direction:ltr; text-align:left;
+  }
+  .field::placeholder{ color:var(--muted); opacity:.6; }
+  .field-row{ display:flex; gap:10px; }
+  .field-row .field{ flex:1; }
+  .btn-primary{
+    width:100%; padding:13px 0; border-radius:12px; border:none; cursor:pointer;
+    font-weight:700; font-size:14px; margin-bottom:16px;
+    background:linear-gradient(135deg, var(--amber), var(--gold)); color:#14201B;
+  }
+  .result-box{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:18px; text-align:center; display:none;
+  }
+  .result-box.on{ display:block; }
+  .result-big{ font-family:'IBM Plex Mono', monospace; font-size:32px; font-weight:700; direction:ltr; }
+  .result-sub{ font-size:12px; color:var(--muted); margin-top:6px; line-height:1.9; }
+  .result-tag{
+    display:inline-block; margin-top:10px; padding:4px 14px; border-radius:20px;
+    font-size:12px; font-weight:700;
+  }
+
+  .gauge{ height:10px; border-radius:6px; margin:16px 2px 6px; position:relative;
+    background:linear-gradient(90deg, var(--sky) 0%, var(--teal) 28%, var(--gold) 60%, var(--danger) 100%);
+  }
+  .gauge .ptr{
+    position:absolute; top:-5px; width:3px; height:20px; background:var(--text);
+    border-radius:2px; transform:translateX(50%); box-shadow:0 0 8px rgba(0,0,0,0.5);
+  }
+  .gauge-labels{ display:flex; justify-content:space-between; font-size:9.5px; color:var(--muted); direction:ltr; margin-bottom:4px;}
+
+  .chip-row{ display:flex; gap:7px; margin-bottom:16px; overflow-x:auto; scrollbar-width:none;}
+  .chip-row::-webkit-scrollbar{ display:none; }
+  .chip{
+    flex:0 0 auto; padding:8px 13px; border-radius:20px; font-size:11.5px; font-weight:700;
+    border:1px solid var(--line); color:var(--muted); background:var(--surface); cursor:pointer; white-space:nowrap;
+  }
+  .chip.on{ background:var(--violet); border-color:var(--violet); color:#181428; }
+
+  .age-stats{ display:flex; gap:8px; margin-top:14px; }
+  .age-stat{ flex:1; background:var(--surface2); border-radius:12px; padding:10px 6px; text-align:center; }
+  .age-stat b{ display:block; font-family:'IBM Plex Mono',monospace; font-size:16px; color:var(--gold); }
+  .age-stat span{ font-size:9.5px; color:var(--muted); }
+
   /* ---- Settings modal ---- */
   #overlay{
     position:fixed; inset:0; background:rgba(0,0,0,0.55); display:none;
@@ -283,6 +355,13 @@
         <div class="key fn" onclick="memClear()">MC</div>
         <div class="key op" onclick="append('(')">(</div>
       </div>
+      <div class="row">
+        <div class="key fn" onclick="applyFn('fact')">x!</div>
+        <div class="key fn" onclick="applyFn('inv')">1/x</div>
+        <div class="key op" onclick="append(')')">)</div>
+        <div class="key fn" onclick="applyFn('rand')">rand</div>
+        <div class="key fn" onclick="applyFn('cube')">x³</div>
+      </div>
     </div>
 
     <div id="keypad">
@@ -332,7 +411,7 @@
       <!-- MARKET (manual/editable + optional auto fetch) -->
       <div class="ratelist market on" id="list-market">
         <div class="statusrow">
-          <span class="updated" id="marketUpdated">لمس = وارد ماشین‌حساب / دوبار لمس روی عدد = ویرایش</span>
+          <span class="updated" id="marketUpdated">نرخ‌های مرجع: ۱۳ تیر ۱۴۰۵ — لمس=وارد ماشین‌حساب / دوبار لمس=ویرایش</span>
           <button class="refresh" onclick="fetchMarketRates()">↻ خودکار</button>
         </div>
         <div class="section-label">ارزها (تومان)</div>
@@ -340,7 +419,7 @@
         <div class="section-label">طلا و سکه داخلی (تومان)</div>
         <div id="goldIranCards"></div>
         <div class="hint">
-          نرخ‌های این بخش نمونهٔ قابل‌ویرایش‌اند. با «دریافت خودکار» تلاش می‌شود از یک سرویس رایگان با محدودیت درخواست دریافت شود (ممکن است گاهی در دسترس نباشد). برای دقت بیشتر می‌توانید کلید API رایگان خودتان را از brsapi.ir بگیرید و در تنظیمات ⚙ وارد کنید. مقادیرِ ویرایش‌شده روی همین گوشی ذخیره می‌شوند.
+          نرخ‌های این بخش بر پایهٔ آخرین قیمت‌های ثبت‌شده تا ۱۳ تیر ۱۴۰۵ تنظیم شده‌اند و از آن به بعد دستی بروزرسانی نشده‌اند. چون بازار آزاد هر روز نوسان دارد، بهتر است هر روز با یه نگاه به سایتی مثل tgju.org یا alanchand.com عدد رو با دوبار لمس روی ردیف اصلاح کنی. دکمه «دریافت خودکار» هم می‌تونی امتحان کنی، ولی چون سرویس‌های خارجی گاهی از داخل ایران در دسترس نیستن ممکنه جواب نده.
         </div>
       </div>
 
@@ -376,12 +455,144 @@
     </div>
   </div>
 
+  <!-- TOOLS VIEW -->
+  <div class="view" id="view-tools">
+    <div id="toolsArea">
+
+      <div id="toolsHome">
+        <div class="tool-grid">
+          <div class="tool-card" onclick="openTool('bmi')">
+            <div class="ticon" style="background:rgba(89,195,180,0.14); color:var(--teal);">⚖️</div>
+            <div class="tname">قد و وزن (BMI)</div>
+            <div class="tdesc">شاخص توده بدنی</div>
+          </div>
+          <div class="tool-card" onclick="openTool('age')">
+            <div class="ticon" style="background:rgba(217,178,76,0.14); color:var(--gold);">🎂</div>
+            <div class="tname">محاسبه سن</div>
+            <div class="tdesc">سال، ماه، روز دقیق</div>
+          </div>
+          <div class="tool-card" onclick="openTool('percent')">
+            <div class="ticon" style="background:rgba(156,141,224,0.14); color:var(--violet);">٪</div>
+            <div class="tname">درصدگیری مبلغ</div>
+            <div class="tdesc">تخفیف، افزایش، نسبت</div>
+          </div>
+          <div class="tool-card" onclick="openTool('discount')">
+            <div class="ticon" style="background:rgba(211,104,76,0.14); color:var(--rust);">🏷️</div>
+            <div class="tname">تخفیف و مالیات</div>
+            <div class="tdesc">قیمت نهایی و سود</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BMI -->
+      <div class="toolpage" id="tool-bmi">
+        <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+        <div class="field-row">
+          <div>
+            <div class="field-label">قد (سانتی‌متر)</div>
+            <input class="field" id="bmiHeight" type="number" inputmode="decimal" placeholder="مثلاً 175">
+          </div>
+          <div>
+            <div class="field-label">وزن (کیلوگرم)</div>
+            <input class="field" id="bmiWeight" type="number" inputmode="decimal" placeholder="مثلاً 70">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="calcBMI()">محاسبه BMI</button>
+        <div class="result-box" id="bmiResult">
+          <div class="result-big" id="bmiValue">--</div>
+          <div class="result-tag" id="bmiTag">--</div>
+          <div class="gauge-labels"><span>کم‌وزن</span><span>طبیعی</span><span>اضافه‌وزن</span><span>چاق</span></div>
+          <div class="gauge"><div class="ptr" id="bmiPtr" style="left:0%"></div></div>
+          <div class="result-sub">محدوده طبیعی BMI بین ۱۸.۵ تا ۲۴.۹ است.</div>
+        </div>
+      </div>
+
+      <!-- AGE -->
+      <div class="toolpage" id="tool-age">
+        <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+        <div class="field-label">تاریخ تولد (میلادی)</div>
+        <input class="field" id="ageBirth" type="date">
+        <button class="btn-primary" onclick="calcAge()">محاسبه سن</button>
+        <div class="result-box" id="ageResultBox">
+          <div class="result-big" id="ageMain">--</div>
+          <div class="result-sub">سن دقیق شما</div>
+          <div class="age-stats">
+            <div class="age-stat"><b id="ageDays">--</b><span>کل روزها</span></div>
+            <div class="age-stat"><b id="ageToBday">--</b><span>روز تا تولد بعدی</span></div>
+          </div>
+          <div class="result-sub" style="margin-top:10px;">تاریخ‌ها میلادی هستند؛ اگر تاریخ تولدت شمسی است، معادل میلادی‌اش را وارد کن.</div>
+        </div>
+      </div>
+
+      <!-- PERCENT -->
+      <div class="toolpage" id="tool-percent">
+        <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+        <div class="chip-row" id="percentChips">
+          <div class="chip on" data-m="of" onclick="setPercentMode('of')">چند درصد از مبلغ</div>
+          <div class="chip" data-m="change" onclick="setPercentMode('change')">افزایش / کاهش درصدی</div>
+          <div class="chip" data-m="ratio" onclick="setPercentMode('ratio')">این عدد چند درصد است</div>
+        </div>
+
+        <div id="pf-of">
+          <div class="field-row">
+            <div><div class="field-label">درصد (٪)</div><input class="field" id="ofPercent" type="number" placeholder="مثلاً 15"></div>
+            <div><div class="field-label">مبلغ (تومان)</div><input class="field" id="ofAmount" type="number" placeholder="مثلاً 2000000"></div>
+          </div>
+        </div>
+
+        <div id="pf-change" style="display:none;">
+          <div class="field-row">
+            <div><div class="field-label">مبلغ اولیه</div><input class="field" id="chAmount" type="number" placeholder="مثلاً 1500000"></div>
+            <div><div class="field-label">درصد تغییر</div><input class="field" id="chPercent" type="number" placeholder="مثلاً 20"></div>
+          </div>
+          <div class="chip-row">
+            <div class="chip on" data-d="inc" onclick="setChangeDir('inc')">افزایش (+)</div>
+            <div class="chip" data-d="dec" onclick="setChangeDir('dec')">کاهش (−)</div>
+          </div>
+        </div>
+
+        <div id="pf-ratio" style="display:none;">
+          <div class="field-row">
+            <div><div class="field-label">عدد جزء</div><input class="field" id="raPart" type="number" placeholder="مثلاً 300000"></div>
+            <div><div class="field-label">عدد کل</div><input class="field" id="raTotal" type="number" placeholder="مثلاً 2000000"></div>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="calcPercent()">محاسبه</button>
+        <div class="result-box" id="percentResultBox">
+          <div class="result-big" id="percentMain">--</div>
+          <div class="result-sub" id="percentSub"></div>
+        </div>
+      </div>
+
+      <!-- DISCOUNT -->
+      <div class="toolpage" id="tool-discount">
+        <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+        <div class="field-label">قیمت اصلی (تومان)</div>
+        <input class="field" id="dsPrice" type="number" placeholder="مثلاً 5000000">
+        <div class="field-row">
+          <div><div class="field-label">درصد تخفیف (٪)</div><input class="field" id="dsDiscount" type="number" placeholder="مثلاً 20"></div>
+          <div><div class="field-label">درصد مالیات (٪ اختیاری)</div><input class="field" id="dsTax" type="number" placeholder="مثلاً 10"></div>
+        </div>
+        <button class="btn-primary" onclick="calcDiscount()">محاسبه قیمت نهایی</button>
+        <div class="result-box" id="discountResultBox">
+          <div class="result-big" id="discountMain">--</div>
+          <div class="result-sub" id="discountSub"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <nav>
     <button class="active" id="nav-calc" onclick="switchView('calc')">
       <span class="ic">🧮</span> ماشین‌حساب
     </button>
     <button id="nav-rates" onclick="switchView('rates')">
       <span class="ic">💱</span> نرخ‌ها
+    </button>
+    <button id="nav-tools" onclick="switchView('tools')">
+      <span class="ic">🛠️</span> ابزارها
     </button>
   </nav>
 </div>
@@ -496,9 +707,16 @@ function applyFn(fn){
     case 'sq': out = v*v; break;
     case 'percent': out = v/100; break;
     case 'neg': out = -v; break;
+    case 'inv': out = 1/v; break;
+    case 'cube': out = v*v*v; break;
+    case 'rand': out = Math.random(); break;
+    case 'fact': {
+      if(v < 0 || !Number.isInteger(v) || v > 170){ out = NaN; break; }
+      let f = 1; for(let i=2;i<=v;i++) f*=i; out = f; break;
+    }
   }
   out = Math.round(out*1e8)/1e8;
-  expr = String(out);
+  expr = isNaN(out) || !isFinite(out) ? "" : String(out);
   render();
 }
 
@@ -513,8 +731,10 @@ function toggleSci(){ document.getElementById('sciRows').classList.toggle('open'
 function switchView(name){
   document.getElementById('view-calc').classList.toggle('active', name==='calc');
   document.getElementById('view-rates').classList.toggle('active', name==='rates');
+  document.getElementById('view-tools').classList.toggle('active', name==='tools');
   document.getElementById('nav-calc').classList.toggle('active', name==='calc');
   document.getElementById('nav-rates').classList.toggle('active', name==='rates');
+  document.getElementById('nav-tools').classList.toggle('active', name==='tools');
 }
 
 function showRateList(which){
@@ -534,8 +754,8 @@ const CURRENCIES = [
   {code:'CNY', name:'یوان چین',    flag:'🇨🇳'},
 ];
 
-let marketRates = { USD: 157000, EUR: 168000, GBP: 196000, AED: 42800, TRY: 4550, CNY: 21600 };
-let goldIran = { gram18: 8250000, bahar: 82000000 };
+let marketRates = { USD: 175000, EUR: 198000, GBP: 223000, AED: 41500, TRY: 4500, CNY: 24300 };
+let goldIran = { gram18: 17460000, bahar: 169600000 };
 let apiKey = "FreeSV0E1LSgB9RDjuf0QorSLViX8pPG";
 
 function makeCard(cls, flag, name, code, valStr, subStr, onTap, onEdit){
@@ -597,6 +817,13 @@ function renderGlobalCards(rates, base){
   });
 }
 
+// Reference values as of 13 Tir 1405 (Jul 4, 2026) — used as fallback if live fetch fails
+const FALLBACK_GOLD = { xau: 4180, xag: 36.5 };
+const FALLBACK_CRYPTO = {
+  bitcoin:{usd:61800}, ethereum:{usd:1715}, tether:{usd:1.00},
+  binancecoin:{usd:561}, ripple:{usd:1.10}, dogecoin:{usd:0.075}, solana:{usd:81}
+};
+
 function renderGoldCards(xau, xag){
   const box = document.getElementById('goldCards');
   box.innerHTML = "";
@@ -634,6 +861,9 @@ function renderCryptoCards(prices){
 }
 
 /* ---------------- Fetchers ---------------- */
+// Reference values as of 13 Tir 1405 (Jul 4, 2026)
+const FALLBACK_FX = { USD:1, EUR:0.926, GBP:0.787, AED:3.6725, TRY:39.0, CNY:7.17 };
+
 async function fetchGlobalRates(){
   document.getElementById('globalUpdated').textContent = 'در حال دریافت...';
   try{
@@ -641,11 +871,11 @@ async function fetchGlobalRates(){
     const data = await res.json();
     if(data && data.rates){
       renderGlobalCards(data.rates, 'USD');
-      document.getElementById('globalUpdated').textContent = 'بروزرسانی: ' + new Date().toLocaleTimeString('fa-IR');
+      document.getElementById('globalUpdated').textContent = 'بروزرسانی زنده: ' + new Date().toLocaleTimeString('fa-IR');
     } else throw new Error('no rates');
   }catch(err){
-    document.getElementById('globalUpdated').textContent = 'خطا در دریافت — دوباره تلاش کنید';
-    renderGlobalCards(null, 'USD');
+    renderGlobalCards(FALLBACK_FX, 'USD');
+    document.getElementById('globalUpdated').textContent = 'دریافت زنده ناموفق بود — نرخ مرجع ۱۳ تیر ۱۴۰۵ نمایش داده می‌شود';
   }
 }
 
@@ -660,11 +890,12 @@ async function fetchGoldRates(){
     const dXag = await rXag.json();
     const xau = dXau && (dXau.price ?? dXau.Price);
     const xag = dXag && (dXag.price ?? dXag.Price);
+    if(!xau) throw new Error('no data');
     renderGoldCards(xau, xag);
-    document.getElementById('goldUpdated').textContent = xau ? 'بروزرسانی: ' + new Date().toLocaleTimeString('fa-IR') : 'داده‌ای دریافت نشد';
+    document.getElementById('goldUpdated').textContent = 'بروزرسانی زنده: ' + new Date().toLocaleTimeString('fa-IR');
   }catch(err){
-    document.getElementById('goldUpdated').textContent = 'خطا در دریافت — دوباره تلاش کنید';
-    renderGoldCards(null, null);
+    renderGoldCards(FALLBACK_GOLD.xau, FALLBACK_GOLD.xag);
+    document.getElementById('goldUpdated').textContent = 'دریافت زنده ناموفق بود — نرخ مرجع ۱۳ تیر ۱۴۰۵ نمایش داده می‌شود';
   }
 }
 
@@ -674,11 +905,12 @@ async function fetchCryptoRates(){
     const ids = CRYPTOS.map(c=>c.id).join(',');
     const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
     const data = await res.json();
+    if(!data || !data.bitcoin) throw new Error('no data');
     renderCryptoCards(data);
-    document.getElementById('cryptoUpdated').textContent = 'بروزرسانی: ' + new Date().toLocaleTimeString('fa-IR');
+    document.getElementById('cryptoUpdated').textContent = 'بروزرسانی زنده: ' + new Date().toLocaleTimeString('fa-IR');
   }catch(err){
-    document.getElementById('cryptoUpdated').textContent = 'خطا در دریافت — دوباره تلاش کنید';
-    renderCryptoCards(null);
+    renderCryptoCards(FALLBACK_CRYPTO);
+    document.getElementById('cryptoUpdated').textContent = 'دریافت زنده ناموفق بود — نرخ مرجع ۱۳ تیر ۱۴۰۵ نمایش داده می‌شود';
   }
 }
 
@@ -697,7 +929,7 @@ async function fetchMarketRates(){
         if(match && price){ marketRates[match.code] = Number(price); }
       });
       renderMarketCards();
-      renderGoldCards(null,null); // refresh toman estimate placeholders
+      renderGoldCards(FALLBACK_GOLD.xau, FALLBACK_GOLD.xag); // refresh toman estimate placeholders
       fetchGoldRates();
       fetchCryptoRates();
       document.getElementById('marketUpdated').textContent = 'دریافت شد — روی هر ردیف بزنید';
@@ -706,6 +938,127 @@ async function fetchMarketRates(){
   }catch(err){
     document.getElementById('marketUpdated').textContent = 'دریافت خودکار ناموفق بود؛ نرخ‌ها را دستی ویرایش کنید (دوبار لمس روی عدد)';
   }
+}
+
+/* ---------------- Tools ---------------- */
+function openTool(name){
+  document.getElementById('toolsHome').style.display = 'none';
+  document.querySelectorAll('.toolpage').forEach(el=>el.classList.remove('on'));
+  document.getElementById('tool-'+name).classList.add('on');
+}
+function closeTool(){
+  document.getElementById('toolsHome').style.display = 'block';
+  document.querySelectorAll('.toolpage').forEach(el=>el.classList.remove('on'));
+}
+function numOf(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; }
+
+/* --- BMI --- */
+function calcBMI(){
+  const hCm = numOf('bmiHeight'), w = numOf('bmiWeight');
+  const box = document.getElementById('bmiResult');
+  if(!hCm || !w || hCm<=0 || w<=0){ box.classList.remove('on'); alert('قد و وزن را درست وارد کن.'); return; }
+  const h = hCm/100;
+  const bmi = w/(h*h);
+  document.getElementById('bmiValue').textContent = bmi.toFixed(1);
+  let tag, color, pct;
+  if(bmi < 18.5){ tag='کم‌وزن'; color='var(--sky)'; pct = mapRange(bmi,12,18.5,0,25); }
+  else if(bmi < 25){ tag='طبیعی'; color='var(--teal)'; pct = mapRange(bmi,18.5,25,25,55); }
+  else if(bmi < 30){ tag='اضافه‌وزن'; color='var(--gold)'; pct = mapRange(bmi,25,30,55,80); }
+  else { tag='چاق'; color='var(--danger)'; pct = mapRange(bmi,30,40,80,100); }
+  const tagEl = document.getElementById('bmiTag');
+  tagEl.textContent = tag;
+  tagEl.style.background = color; tagEl.style.color = '#12201C';
+  document.getElementById('bmiPtr').style.left = Math.max(0,Math.min(100,pct))+'%';
+  box.classList.add('on');
+}
+function mapRange(v, inMin, inMax, outMin, outMax){
+  const t = Math.max(0, Math.min(1, (v-inMin)/(inMax-inMin)));
+  return outMin + t*(outMax-outMin);
+}
+
+/* --- Age --- */
+function calcAge(){
+  const val = document.getElementById('ageBirth').value;
+  const box = document.getElementById('ageResultBox');
+  if(!val){ box.classList.remove('on'); alert('تاریخ تولد را انتخاب کن.'); return; }
+  const birth = new Date(val + 'T00:00:00');
+  const now = new Date();
+  if(birth > now){ alert('تاریخ تولد نمی‌تواند در آینده باشد.'); return; }
+
+  let y = now.getFullYear() - birth.getFullYear();
+  let m = now.getMonth() - birth.getMonth();
+  let d = now.getDate() - birth.getDate();
+  if(d < 0){
+    m -= 1;
+    const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+    d += prevMonth.getDate();
+  }
+  if(m < 0){ y -= 1; m += 12; }
+
+  const totalDays = Math.floor((now - birth) / 86400000);
+
+  let nextBday = new Date(now.getFullYear(), birth.getMonth(), birth.getDate());
+  if(nextBday < now) nextBday = new Date(now.getFullYear()+1, birth.getMonth(), birth.getDate());
+  const daysToBday = Math.ceil((nextBday - now) / 86400000);
+
+  document.getElementById('ageMain').textContent = `${y} سال، ${m} ماه، ${d} روز`;
+  document.getElementById('ageDays').textContent = fmt(totalDays);
+  document.getElementById('ageToBday').textContent = fmt(daysToBday);
+  box.classList.add('on');
+}
+
+/* --- Percent toolkit --- */
+let percentMode = 'of';
+let changeDir = 'inc';
+function setPercentMode(m){
+  percentMode = m;
+  document.querySelectorAll('#percentChips .chip').forEach(c=> c.classList.toggle('on', c.dataset.m===m));
+  document.getElementById('pf-of').style.display = m==='of' ? 'block' : 'none';
+  document.getElementById('pf-change').style.display = m==='change' ? 'block' : 'none';
+  document.getElementById('pf-ratio').style.display = m==='ratio' ? 'block' : 'none';
+  document.getElementById('percentResultBox').classList.remove('on');
+}
+function setChangeDir(d){
+  changeDir = d;
+  document.querySelectorAll('#pf-change .chip').forEach(c=> c.classList.toggle('on', c.dataset.d===d));
+}
+function calcPercent(){
+  const box = document.getElementById('percentResultBox');
+  if(percentMode === 'of'){
+    const p = numOf('ofPercent'), a = numOf('ofAmount');
+    if(p===null || a===null){ alert('مقادیر را کامل وارد کن.'); return; }
+    const res = a * p / 100;
+    document.getElementById('percentMain').textContent = fmt(res) + ' تومان';
+    document.getElementById('percentSub').textContent = `${p}٪ از ${fmt(a)} تومان`;
+  } else if(percentMode === 'change'){
+    const a = numOf('chAmount'), p = numOf('chPercent');
+    if(a===null || p===null){ alert('مقادیر را کامل وارد کن.'); return; }
+    const res = changeDir==='inc' ? a * (1+p/100) : a * (1-p/100);
+    const diff = Math.abs(res - a);
+    document.getElementById('percentMain').textContent = fmt(Math.round(res)) + ' تومان';
+    document.getElementById('percentSub').textContent = `${changeDir==='inc'?'افزایش':'کاهش'} ${p}٪ نسبت به ${fmt(a)} تومان — تفاوت: ${fmt(Math.round(diff))} تومان`;
+  } else if(percentMode === 'ratio'){
+    const part = numOf('raPart'), total = numOf('raTotal');
+    if(part===null || total===null || total===0){ alert('مقادیر را کامل و درست وارد کن.'); return; }
+    const res = part/total*100;
+    document.getElementById('percentMain').textContent = res.toFixed(2) + '٪';
+    document.getElementById('percentSub').textContent = `${fmt(part)} از ${fmt(total)} تومان`;
+  }
+  box.classList.add('on');
+}
+
+/* --- Discount / tax --- */
+function calcDiscount(){
+  const price = numOf('dsPrice'), disc = numOf('dsDiscount') ?? 0, tax = numOf('dsTax') ?? 0;
+  const box = document.getElementById('discountResultBox');
+  if(price===null || price<=0){ alert('قیمت اصلی را وارد کن.'); return; }
+  const afterDiscount = price * (1 - disc/100);
+  const finalPrice = afterDiscount * (1 + tax/100);
+  const saved = price - afterDiscount;
+  document.getElementById('discountMain').textContent = fmt(Math.round(finalPrice)) + ' تومان';
+  document.getElementById('discountSub').textContent =
+    `قیمت اصلی: ${fmt(price)} تومان — مقدار تخفیف: ${fmt(Math.round(saved))} تومان${tax? ' — مالیات اعمال‌شده: '+tax+'٪' : ''}`;
+  box.classList.add('on');
 }
 
 /* ---------------- Settings ---------------- */
@@ -733,9 +1086,9 @@ async function init(){
   render();
   renderMarketCards();
   renderGoldIranCards();
-  renderGlobalCards(null, 'USD');
-  renderGoldCards(null, null);
-  renderCryptoCards(null);
+  renderGlobalCards(FALLBACK_FX, 'USD');
+  renderGoldCards(FALLBACK_GOLD.xau, FALLBACK_GOLD.xag);
+  renderCryptoCards(FALLBACK_CRYPTO);
   fetchGlobalRates();
   fetchGoldRates();
   fetchCryptoRates();
