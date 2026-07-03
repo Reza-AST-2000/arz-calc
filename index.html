@@ -138,15 +138,16 @@
     font-family:'IBM Plex Mono', monospace; visibility:hidden; position:relative;
   }
 
-  /* ---- Tabs ---- */
+  /* ---- Tabs (اصلاح مشکل بریده شدن تصویر 1000116247.png) ---- */
   nav{
     flex-shrink: 0;
     display:flex; border-top:1px solid var(--line);
     background:var(--surface);
     z-index: 10;
+    padding-bottom: clamp(10px, env(safe-area-inset-bottom), 30px);
   }
   nav button{
-    flex:1; padding:12px 0 calc(12px + env(safe-area-inset-bottom));
+    flex:1; padding:12px 0 8px;
     background:none; border:none; color:var(--muted);
     font-family:'Vazirmatn'; font-size:12px; font-weight:600;
     display:flex; flex-direction:column; align-items:center; gap:3px;
@@ -360,7 +361,8 @@
   .settings-grid input { width:100%; background:var(--surface2); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-family:'IBM Plex Mono', monospace; font-size:13px; direction:ltr; }
 
   .shamsi-selector { display:flex; gap:8px; margin-bottom:14px; }
-  .shamsi-selector select { flex:1; background:var(--surface2); color:var(--text); border:1px solid var(--line); border-radius:12px; padding:12px; font-family:'Vazirmatn'; font-size:14px; outline:none; }
+  .shamsi-selector select, .tool-select { flex:1; background:var(--surface2); color:var(--text); border:1px solid var(--line); border-radius:12px; padding:12px; font-family:'Vazirmatn'; font-size:14px; outline:none; }
+  .tool-select { width: 100%; margin-bottom: 14px; }
 </style>
 </head>
 <body>
@@ -514,6 +516,10 @@
               <div class="ticon" style="background:rgba(217,178,76,0.14); color:var(--gold);">🎂</div>
               <div class="tname">محاسبه سن (شمسی)</div>
             </div>
+            <div class="tool-card" onclick="openTool('convdate')">
+              <div class="ticon" style="background:rgba(111,177,217,0.14); color:var(--sky);">📅</div>
+              <div class="tname">تبدیل تاریخ جامع</div>
+            </div>
             <div class="tool-card" onclick="openTool('percent')">
               <div class="ticon" style="background:rgba(156,141,224,0.14); color:var(--violet);">٪</div>
               <div class="tname">درصدگیری مبلغ</div>
@@ -543,7 +549,6 @@
           <div class="result-box" id="bmiResult">
             <div class="result-big-bmi" id="bmiValue">--</div>
             <div class="result-tag" id="bmiTag">--</div>
-            <!-- بخش محاسبه زنده کیلوگرم‌های اضافی و هدف لاغری -->
             <div class="result-advice-text" id="bmiAdvice"></div>
             
             <div class="gauge-labels"><span>کم‌وزن</span><span>طبیعی</span><span>اضافه‌وزن</span><span>چاق</span></div>
@@ -575,6 +580,33 @@
               <div class="age-stat"><b id="ageDays">--</b><span>کل روزهای عمر</span></div>
               <div class="age-stat"><b id="ageToBday">--</b><span>روز تا تولد بعدی</span></div>
             </div>
+          </div>
+        </div>
+
+        <!-- Universal Date Converter Tool -->
+        <div class="toolpage" id="tool-convdate">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">نوع تقویم ورودی را انتخاب کنید:</div>
+          <select class="tool-select" id="convSourceType" onchange="updateConvSelectors()">
+            <option value="shamsi">خورشیدی (شمسی)</option>
+            <option value="gregorian">میلادی (Gregorian)</option>
+            <option value="hijri">قمری (Hijri)</option>
+          </select>
+          
+          <div class="field-label">تاریخ مورد نظر جهت تبدیل:</div>
+          <div class="shamsi-selector">
+            <select id="convYear"></select>
+            <select id="convMonth"></select>
+            <select id="convDay"></select>
+          </div>
+          
+          <button class="btn-primary" onclick="processDateConversion()">تبدیل تاریخ</button>
+          
+          <div class="result-box" id="convResultBox" style="text-align: right; padding: 15px;">
+            <div class="section-label" style="margin-top:0;">نتایج تبدیل معادل:</div>
+            <div style="margin: 8px 0; font-size:13px;">📅 خورشیدی: <b id="outShamsi" style="color:var(--amber); font-family:'IBM Plex Mono',sans-serif;">--</b></div>
+            <div style="margin: 8px 0; font-size:13px;">📅 میلادی: <b id="outGregorian" style="color:var(--sky); font-family:'IBM Plex Mono',sans-serif;">--</b></div>
+            <div style="margin: 8px 0; font-size:13px;">📅 قمری: <b id="outHijri" style="color:var(--teal); font-family:'IBM Plex Mono',sans-serif;">--</b></div>
           </div>
         </div>
 
@@ -834,62 +866,44 @@ function saveAllSettings(){
 }
 
 /* --- Functional Tools --- */
-function openTool(name){ document.getElementById('toolsHome').style.display='none'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); document.getElementById('tool-'+name).classList.add('on'); if(name==='age') initShamsiSelectors(); }
+function openTool(name){ document.getElementById('toolsHome').style.display='none'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); document.getElementById('tool-'+name).classList.add('on'); if(name=='age') initShamsiSelectors(); if(name=='convdate') updateConvSelectors(); }
 function closeTool(){ document.getElementById('toolsHome').style.display='block'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); }
 function numOf(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; }
 
-/* اصلاح کامل و بررسی منطق نمایش خروجی اضافه وزن */
 function calcBMI(){
   const hCm = numOf('bmiHeight'), w = numOf('bmiWeight'), box = document.getElementById('bmiResult');
   if(!hCm || !w || hCm<=0 || w<=0){ box.classList.remove('on'); alert('قد و وزن را درست وارد کنید.'); return; }
-  
   const h = hCm/100, bmi = w/(h*h);
   document.getElementById('bmiValue').textContent = bmi.toFixed(1);
-  
-  let tag, color, pct;
-  let adviceText = "";
-  
-  // محاسبه سقف مجاز وزن ایده آل و نرمال بر اساس فرمول (BMI = 24.9)
+  let tag, color, pct, adviceText = "";
   const maxNormalWeight = 24.9 * (h * h);
-  
   if(bmi < 18.5){
     tag='کم‌وزن'; color='#59C3B4'; pct = (bmi-12)/(18.5-12)*25;
     const minNormalWeight = 18.5 * (h * h);
-    const weightNeed = Math.ceil(minNormalWeight - w);
-    adviceText = `وزن هدف شما باید حداقل افزایش یابد. شما نیاز به افزایش <b style="color:var(--sky); font-size:15px;">${weightNeed} کیلوگرم</b> دارید تا به محدوده وزن طبیعی برسید.`;
-  }
-  else if(bmi < 25){
+    adviceText = `وزن هدف شما باید حداقل افزایش یابد. شما نیاز به افزایش <b style="color:var(--sky); font-size:15px;">${Math.ceil(minNormalWeight - w)} کیلوگرم</b> دارید.`;
+  } else if(bmi < 25){
     tag='طبیعی'; color='#2D8A7E'; pct = 25 + (bmi-18.5)/(25-18.5)*30;
-    adviceText = `شاخص توده بدنی شما عالی است! شما در محدوده <b style="color:var(--teal); font-size:15px;">کاملاً طبیعی و ایده آل</b> هستید.`;
-  }
-  else if(bmi < 30){
+    adviceText = `شاخص توده بدنی عالی است! در محدوده <b style="color:var(--teal); font-size:15px;">کاملاً طبیعی و ایده آل</b> هستید.`;
+  } else if(bmi < 30){
     tag='اضافه‌وزن'; color='#F2A93B'; pct = 55 + (bmi-25)/(30-25)*25;
-    const weightToLose = Math.ceil(w - maxNormalWeight);
-    adviceText = `شما دارای <b style="color:var(--gold); font-size:15px;">${weightToLose} کیلوگرم اضافه وزن</b> هستید. برای رسیدن به تناسب اندام ایده آل باید همین مقدار لاغر شوید.`;
-  }
-  else {
+    adviceText = `شما دارای <b style="color:var(--gold); font-size:15px;">${Math.ceil(w - maxNormalWeight)} کیلوگرم اضافه وزن</b> هستید. باید لاغر شوید.`;
+  } else {
     tag='چاق'; color='#E2664B'; pct = 80 + (bmi-30)/(40-30)*20;
-    const weightToLose = Math.ceil(w - maxNormalWeight);
-    adviceText = `شما در وضعیت چاقی قرار دارید و نزدیک به <b style="color:var(--danger); font-size:16px;">${weightToLose} کیلوگرم وزن اضافی</b> دارید که باید با رژیم و ورزش لاغر کنید تا به مرز طبیعی برسید.`;
+    adviceText = `شما در وضعیت چاقی قرار دارید و <b style="color:var(--danger); font-size:16px;">${Math.ceil(w - maxNormalWeight)} کیلوگرم وزن اضافی</b> دارید.`;
   }
-  
-  // رندر تگ وضعیت چاقی/نرمال دقیقاً زیر باکس عدد
   const tEl = document.getElementById('bmiTag'); tEl.textContent = tag; tEl.style.background = color; tEl.style.color = '#12201C';
-  
-  // تزریق متن به صورت HTML تا مطمئن شویم استایل رنگی اعمال می‌شود
   document.getElementById('bmiAdvice').innerHTML = adviceText;
-  
-  // جابجایی اسلایدر رنگی
   document.getElementById('bmiPtr').style.left = Math.max(0,Math.min(100,pct))+'%'; 
   box.classList.add('on');
 }
 
-/* --- Accurate Shamsi Age Algorithms --- */
+/* --- Gregorian / Shamsi / Hijri Core Logic --- */
 function initShamsiSelectors(){
   const y = document.getElementById('shamsiYear'), d = document.getElementById('shamsiDay'); if(y.children.length > 0) return;
   for(let i=1405; i>=1300; i--){ let o=document.createElement('option'); o.value=i; o.textContent=i; if(i===1380) o.selected=true; y.appendChild(o); }
   for(let i=1; i<=31; i++){ let o=document.createElement('option'); o.value=i; o.textContent=i; d.appendChild(o); }
 }
+
 function shamsiToGregorian(jy, jm, jd) {
   jy += 1595; let days = -355668 + (365 * jy) + (Math.floor(jy / 33) * 8) + (Math.floor(((jy % 33) + 3) / 4)) + jd + ((jm < 8) ? (jm - 1) * 31 : ((jm - 7) * 30) + 186);
   let gy = 400 * Math.floor(days / 146097); days %= 146097;
@@ -898,6 +912,87 @@ function shamsiToGregorian(jy, jm, jd) {
   let gd = days + 1, sal_a = [0, 31, ((gy % 4 === 0 && gy % 100 !== 0) || (gy % 400 === 0)) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31], gm;
   for (gm = 0; gm < 13 && gd > sal_a[gm]; gm++) gd -= sal_a[gm]; return [gy, gm, gd];
 }
+
+function gregorianToShamsi(gy, gm, gd) {
+  let d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]; let gy2 = (gm > 2) ? (gy + 1) : gy;
+  let days = 355666 + (365 * gy) + Math.floor((gy2 + 3) / 4) - Math.floor((gy2 + 99) / 100) + Math.floor((gy2 + 399) / 400) + gd + d_m[gm - 1];
+  let jy = -1595 + 33 * Math.floor(days / 12053); days %= 12053; jy += 4 * Math.floor(days / 1461); days %= 1461;
+  if (days > 365) { jy += Math.floor((days - 1) / 365); days = (days - 1) % 365; }
+  let jm = (days < 186) ? 1 + Math.floor(days / 31) : 7 + Math.floor((days - 186) / 30);
+  let jd = 1 + ((days < 186) ? (days % 31) : ((days - 186) % 30)); return [jy, jm, jd];
+}
+
+function gregorianToHijri(gy, gm, gd) {
+  if (gm < 3) { gy--; gm += 12; }
+  let a = Math.floor(gy / 100), b = Math.floor(a / 4), c = 2 - a + b, e = Math.floor(365.25 * (gy + 4716)), f = Math.floor(30.6001 * (gm + 1));
+  let jd = c + gd + e + f - 1524.5;
+  let emotionalM = Math.floor((jd - 1948439.5) / 29.530588853);
+  let hy = Math.floor((emotionalM / 12) + 1); let hm = Math.floor(emotionalM % 12) + 1;
+  let hd = Math.round(jd - (Math.floor(29.530588853 * emotionalM) + 1948439.5)) + 1;
+  if(hd > 30) { hd -= 30; hm++; } if(hm > 12) { hm -= 12; hy++; }
+  return [hy, hm, hd];
+}
+
+function hijriToGregorian(hy, hm, hd) {
+  let emotionalM = Math.floor((hy - 1) * 12 + hm - 1);
+  let jd = Math.floor(29.530588853 * emotionalM) + 1948439.5 + hd - 1;
+  let z = Math.floor(jd + 0.5), alpha = Math.floor((z - 1867216.25) / 36524.25), a = z + 1 + alpha - Math.floor(alpha / 4);
+  let b = a + 1524, c = Math.floor((b - 122.1) / 365.25), d = Math.floor(365.25 * c), x = Math.floor((b - d) / 30.6001);
+  let gd = b - d - Math.floor(30.6001 * x), gm = x < 14 ? x - 1 : x - 13, gy = gm > 2 ? c - 4716 : c - 4715;
+  return [gy, gm, gd];
+}
+
+/* --- Converter UI Selectors --- */
+function updateConvSelectors() {
+  const type = document.getElementById('convSourceType').value;
+  const ySel = document.getElementById('convYear'), mSel = document.getElementById('convMonth'), dSel = document.getElementById('convDay');
+  ySel.innerHTML = ""; mSel.innerHTML = ""; dSel.innerHTML = "";
+
+  let startYear = 1300, endYear = 1450, months = [];
+  if(type === 'shamsi') {
+    startYear = 1300; endYear = 1420;
+    months = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+  } else if(type === 'gregorian') {
+    startYear = 1920; endYear = 2040;
+    months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  } else {
+    startYear = 1340; endYear = 1470;
+    months = ['محرم','صفر','ربیع‌الاول','ربیع‌الثانی','جمادی‌الاول','جمادی‌الثانی','رجب','شعبان','رمضان','شوال','ذیقعده','ذیحجه'];
+  }
+
+  for(let i = endYear; i >= startYear; i--) { let o = document.createElement('option'); o.value = i; o.textContent = i; ySel.appendChild(o); }
+  months.forEach((m, idx) => { let o = document.createElement('option'); o.value = idx + 1; o.textContent = m; mSel.appendChild(o); });
+  for(let i = 1; i <= 31; i++) { let o = document.createElement('option'); o.value = i; o.textContent = i; dSel.appendChild(o); }
+}
+
+function processDateConversion() {
+  const type = document.getElementById('convSourceType').value;
+  const y = parseInt(document.getElementById('convYear').value);
+  const m = parseInt(document.getElementById('convMonth').value);
+  const d = parseInt(document.getElementById('convDay').value);
+
+  let gY, gM, gD, sY, sM, sD, hY, hM, hD;
+
+  if(type === 'shamsi') {
+    let g = shamsiToGregorian(y, m, d); gY = g[0]; gM = g[1]; gD = g[2];
+    sY = y; sM = m; sD = d;
+    let h = gregorianToHijri(gY, gM, gD); hY = h[0]; hM = h[1]; hD = h[2];
+  } else if(type === 'gregorian') {
+    gY = y; gM = m; gD = d;
+    let s = gregorianToShamsi(gY, gM, gD); sY = s[0]; sM = s[1]; sD = d;
+    let h = gregorianToHijri(gY, gM, gD); hY = h[0]; hM = h[1]; hD = h[2];
+  } else {
+    let g = hijriToGregorian(y, m, d); gY = g[0]; gM = g[1]; gD = g[2];
+    let s = gregorianToShamsi(gY, gM, gD); sY = s[0]; sM = s[1]; sD = s[2];
+    hY = y; hM = m; hD = d;
+  }
+
+  document.getElementById('outShamsi').textContent = `${sY}/${String(sM).padStart(2,'0')}/${String(sD).padStart(2,'0')}`;
+  document.getElementById('outGregorian').textContent = `${gY}/${String(gM).padStart(2,'0')}/${String(gD).padStart(2,'0')}`;
+  document.getElementById('outHijri').textContent = `${hY}/${String(hM).padStart(2,'0')}/${String(hD).padStart(2,'0')}`;
+  document.getElementById('convResultBox').classList.add('on');
+}
+
 function calcAgeShamsi(){
   const jy = parseInt(document.getElementById('shamsiYear').value), jm = parseInt(document.getElementById('shamsiMonth').value), jd = parseInt(document.getElementById('shamsiDay').value), box = document.getElementById('ageResultBox');
   const gB = shamsiToGregorian(jy, jm, jd), birthDate = new Date(gB[0], gB[1] - 1, gB[2]), nowDate = new Date();
@@ -922,7 +1017,6 @@ function calcAgeShamsi(){
   document.getElementById('resYear').textContent = dY;
   document.getElementById('resMonth').textContent = dM;
   document.getElementById('resDay').textContent = dD;
-  
   document.getElementById('ageDays').textContent = fmt(totalDays);
   document.getElementById('ageToBday').textContent = fmt(Math.ceil((nextB - nowDate) / 86400000));
   box.classList.add('on');
