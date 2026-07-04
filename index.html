@@ -264,6 +264,24 @@
   .tool-card .tname{ font-size:12.5px; font-weight:700; }
   .tool-card .tdesc{ font-size:10px; color:var(--muted); line-height:1.6; }
 
+  .tool-section-title{ font-size:12.5px; font-weight:700; color:var(--muted); margin:18px 4px 8px; }
+  .tool-section-title:first-child{ margin-top:2px; }
+  .tool-list{ display:flex; flex-direction:column; gap:8px; }
+  .tool-row{
+    display:flex; align-items:center; gap:12px;
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:12px 14px; cursor:pointer;
+  }
+  .tool-row:active{ background:var(--surface2); }
+  .tool-row .ticon{
+    flex-shrink:0; width:42px; height:42px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center; font-size:19px;
+  }
+  .tool-row .trow-mid{ flex:1; min-width:0; }
+  .tool-row .tname{ font-size:13.5px; font-weight:700; }
+  .tool-row .tdesc{ font-size:11px; color:var(--muted); margin-top:2px; line-height:1.5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tool-row .tarrow{ flex-shrink:0; color:var(--muted); font-size:20px; opacity:.6; }
+
   .toolpage{ display:none; flex-direction:column; }
   .toolpage.on{ display:flex; }
   .tool-back{
@@ -278,6 +296,26 @@
     direction:ltr; text-align:left;
   }
   .field::placeholder{ color:var(--muted); opacity:.6; }
+
+  /* ---- Custom range slider ---- */
+  input.range-input{
+    -webkit-appearance:none; appearance:none;
+    height:8px; padding:0; border:none; border-radius:6px;
+    background: linear-gradient(to right, var(--violet) 0%, var(--violet) 8%, var(--surface2) 8%, var(--surface2) 100%);
+    outline:none; cursor:pointer;
+  }
+  input.range-input::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none;
+    width:22px; height:22px; border-radius:50%;
+    background:var(--violet); border:3px solid var(--text);
+    box-shadow:0 2px 6px rgba(0,0,0,0.4); cursor:pointer;
+  }
+  input.range-input::-moz-range-thumb{
+    width:22px; height:22px; border-radius:50%;
+    background:var(--violet); border:3px solid var(--text);
+    box-shadow:0 2px 6px rgba(0,0,0,0.4); cursor:pointer;
+  }
+  input.range-input::-moz-range-track{ height:8px; border-radius:6px; background:var(--surface2); }
   .field-row{ display:flex; gap:10px; }
   .field-row > div { flex:1; }
   .btn-primary{
@@ -529,46 +567,61 @@
     <div class="view" id="view-tools">
       <div id="toolsArea">
         <div id="toolsHome">
-          <div class="tool-grid">
-            <div class="tool-card" onclick="openTool('bmi')">
+          <div class="tool-section-title">🧮 محاسبات کاربردی</div>
+          <div class="tool-list">
+            <div class="tool-row" onclick="openTool('bmi')">
               <div class="ticon" style="background:rgba(89,195,180,0.14); color:var(--teal);">⚖️</div>
-              <div class="tname">قد و وزن (BMI)</div>
+              <div class="trow-mid"><div class="tname">قد و وزن (BMI)</div><div class="tdesc">شاخص توده بدنی و وضعیت سلامت</div></div>
+              <div class="tarrow">‹</div>
             </div>
-            <div class="tool-card" onclick="openTool('age')">
+            <div class="tool-row" onclick="openTool('age')">
               <div class="ticon" style="background:rgba(217,178,76,0.14); color:var(--gold);">🎂</div>
-              <div class="tname">محاسبه سن (شمسی)</div>
+              <div class="trow-mid"><div class="tname">محاسبه سن (شمسی)</div><div class="tdesc">سن دقیق، روزهای مانده تا تولد</div></div>
+              <div class="tarrow">‹</div>
             </div>
-            <div class="tool-card" onclick="openTool('convdate')">
+            <div class="tool-row" onclick="openTool('convdate')">
               <div class="ticon" style="background:rgba(111,177,217,0.14); color:var(--sky);">📅</div>
-              <div class="tname">تبدیل تاریخ جامع</div>
+              <div class="trow-mid"><div class="tname">تبدیل تاریخ جامع</div><div class="tdesc">شمسی، میلادی و قمری</div></div>
+              <div class="tarrow">‹</div>
             </div>
-            <div class="tool-card" onclick="openTool('percent')">
+            <div class="tool-row" onclick="openTool('percent')">
               <div class="ticon" style="background:rgba(156,141,224,0.14); color:var(--violet);">٪</div>
-              <div class="tname">درصدگیری مبلغ</div>
+              <div class="trow-mid"><div class="tname">درصدگیری مبلغ</div><div class="tdesc">تخفیف، افزایش، نسبت دو عدد</div></div>
+              <div class="tarrow">‹</div>
             </div>
-            <div class="tool-card" onclick="openTool('discount')">
+            <div class="tool-row" onclick="openTool('discount')">
               <div class="ticon" style="background:rgba(211,104,76,0.14); color:var(--rust);">🏷️</div>
-              <div class="tname">تخفیف و مالیات</div>
+              <div class="trow-mid"><div class="tname">تخفیف و مالیات</div><div class="tdesc">قیمت نهایی و مقدار سود</div></div>
+              <div class="tarrow">‹</div>
             </div>
-            <div class="tool-card" onclick="openTool('qr')">
-              <div class="ticon" style="background:rgba(89,195,180,0.14); color:var(--teal);">🔳</div>
-              <div class="tname">ساخت QR کد</div>
-            </div>
-            <div class="tool-card" onclick="openTool('scan')">
-              <div class="ticon" style="background:rgba(111,177,217,0.14); color:var(--sky);">📷</div>
-              <div class="tname">اسکن QR</div>
-            </div>
-            <div class="tool-card" onclick="openTool('unit')">
+            <div class="tool-row" onclick="openTool('unit')">
               <div class="ticon" style="background:rgba(217,178,76,0.14); color:var(--gold);">📐</div>
-              <div class="tname">مبدل واحدها</div>
+              <div class="trow-mid"><div class="tname">مبدل واحدها</div><div class="tdesc">طول، وزن، حجم، دما، حافظه دیجیتال</div></div>
+              <div class="tarrow">‹</div>
             </div>
-            <div class="tool-card" onclick="openTool('pass')">
+          </div>
+
+          <div class="tool-section-title">🔐 QR و امنیت</div>
+          <div class="tool-list">
+            <div class="tool-row" onclick="openTool('qr')">
+              <div class="ticon" style="background:rgba(89,195,180,0.14); color:var(--teal);">🔳</div>
+              <div class="trow-mid"><div class="tname">ساخت QR کد</div><div class="tdesc">وبسایت، وای‌فای، تلگرام و...</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('scan')">
+              <div class="ticon" style="background:rgba(111,177,217,0.14); color:var(--sky);">📷</div>
+              <div class="trow-mid"><div class="tname">اسکن QR</div><div class="tdesc">با تشخیص هوشمند نوع محتوا</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('pass')">
               <div class="ticon" style="background:rgba(156,141,224,0.14); color:var(--violet);">🔑</div>
-              <div class="tname">رمز عبور قوی</div>
+              <div class="trow-mid"><div class="tname">رمز عبور قوی</div><div class="tdesc">تا ۱۲۰ کاراکتر، کاملاً تصادفی</div></div>
+              <div class="tarrow">‹</div>
             </div>
-            <div class="tool-card" onclick="openTool('stego')">
+            <div class="tool-row" onclick="openTool('stego')">
               <div class="ticon" style="background:rgba(211,104,76,0.14); color:var(--rust);">🖼️</div>
-              <div class="tname">مخفی‌سازی متن در عکس</div>
+              <div class="trow-mid"><div class="tname">مخفی‌سازی متن در عکس</div><div class="tdesc">پنهان کردن و استخراج پیام</div></div>
+              <div class="tarrow">‹</div>
             </div>
           </div>
         </div>
@@ -841,7 +894,7 @@
         <div class="toolpage" id="tool-pass">
           <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
           <div class="field-label">طول رمز عبور: <b id="passLenLabel" style="color:var(--violet);">16</b></div>
-          <input class="field" id="passLen" type="range" min="6" max="64" value="16" oninput="document.getElementById('passLenLabel').textContent=this.value">
+          <input class="field range-input" id="passLen" type="range" min="6" max="150" value="16" oninput="updatePassLenSlider(this)">
           <div class="chip-row">
             <div class="chip on" id="passUpper" onclick="this.classList.toggle('on')">حروف بزرگ ABC</div>
             <div class="chip on" id="passLower" onclick="this.classList.toggle('on')">حروف کوچک abc</div>
@@ -1106,7 +1159,7 @@ function saveAllSettings(){
 }
 
 /* --- Functional Tools --- */
-function openTool(name){ document.getElementById('toolsHome').style.display='none'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); document.getElementById('tool-'+name).classList.add('on'); if(name=='age') initShamsiSelectors(); if(name=='convdate') updateConvSelectors(); if(name=='unit') initUnitSelectors(); }
+function openTool(name){ document.getElementById('toolsHome').style.display='none'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); document.getElementById('tool-'+name).classList.add('on'); if(name=='age') initShamsiSelectors(); if(name=='convdate') updateConvSelectors(); if(name=='unit') initUnitSelectors(); if(name=='pass') updatePassLenSlider(document.getElementById('passLen')); }
 function closeTool(){ document.getElementById('toolsHome').style.display='block'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); }
 function numOf(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; }
 
@@ -1555,6 +1608,12 @@ function swapUnit(){
 }
 
 /* --- Password Generator --- */
+function updatePassLenSlider(el){
+  const min = parseFloat(el.min), max = parseFloat(el.max), val = parseFloat(el.value);
+  const pct = ((val - min) / (max - min)) * 100;
+  el.style.background = `linear-gradient(to right, var(--violet) 0%, var(--violet) ${pct}%, var(--surface2) ${pct}%, var(--surface2) 100%)`;
+  document.getElementById('passLenLabel').textContent = val;
+}
 function generatePassword(){
   const len = parseInt(document.getElementById('passLen').value);
   const useUpper = document.getElementById('passUpper').classList.contains('on');
