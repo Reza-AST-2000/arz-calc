@@ -1,4 +1,4 @@
-const CACHE_NAME = "calc-arz-v3";
+const CACHE_NAME = "calc-arz-v4";
 const ASSETS = [
   "./",
   "./index.html",
@@ -32,8 +32,22 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   const isSameOrigin = url.origin === self.location.origin;
   const isCacheableLib = CACHEABLE_CROSS_ORIGIN.includes(event.request.url);
+  const isNavigation = event.request.mode === "navigate";
+  const isHtmlOrRoot = isSameOrigin && (url.pathname.endsWith(".html") || url.pathname.endsWith("/"));
+  const isNetworkFirst = isNavigation || isHtmlOrRoot;
 
   if (!isSameOrigin && !isCacheableLib) return; // let live price API calls pass straight through, uncached
+
+  if (isNetworkFirst) {
+    event.respondWith(
+      fetch(event.request).then((res) => {
+        const resClone = res.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+        return res;
+      }).catch(() => caches.match(event.request))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
