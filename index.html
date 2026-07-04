@@ -281,6 +281,14 @@
   .tool-row .tname{ font-size:13.5px; font-weight:700; }
   .tool-row .tdesc{ font-size:11px; color:var(--muted); margin-top:2px; line-height:1.5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .tool-row .tarrow{ flex-shrink:0; color:var(--muted); font-size:20px; opacity:.6; }
+  .tool-star{ flex-shrink:0; font-size:17px; padding:4px; color:var(--muted); cursor:pointer; }
+  .tool-star.on{ color:var(--gold); }
+
+  .pinned-row{ display:flex; gap:14px; overflow-x:auto; padding:4px 2px 16px; scrollbar-width:none; }
+  .pinned-row::-webkit-scrollbar{ display:none; }
+  .pinned-item{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; width:58px; }
+  .pinned-item .ticon{ width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:21px; }
+  .pinned-item .pname{ font-size:9.5px; color:var(--muted); text-align:center; line-height:1.3; }
 
   .toolpage{ display:none; flex-direction:column; }
   .toolpage.on{ display:flex; }
@@ -380,12 +388,12 @@
   .age-stat span{ font-size:9.5px; color:var(--muted); }
 
   /* ---- Settings overlay ---- */
-  #overlay{
+  #overlay, #historyOverlay{
     position:fixed; inset:0; background:rgba(0,0,0,0.55); display:none;
     align-items:flex-end; justify-content:center; z-index:20;
   }
-  #overlay.on{ display:flex; }
-  #sheet{
+  #overlay.on, #historyOverlay.on{ display:flex; }
+  #sheet, .sheet-box{
     width:100%; max-width:460px; background:var(--surface); border-radius:20px 20px 0 0;
     padding:20px 20px calc(20px + env(safe-area-inset-bottom)); border:1px solid var(--line); border-bottom:none;
     max-height:85vh; overflow-y:auto;
@@ -434,6 +442,7 @@
       <h1>محاسبه‌گر مالی<b>ارز · طلا · کریپتو</b></h1>
     </div>
     <div class="header-actions">
+      <div class="circle-btn" id="historyBtn" onclick="openHistory()">🕐</div>
       <div class="circle-btn" id="themeBtn" onclick="toggleTheme()">🌓</div>
       <div class="circle-btn" id="settingsBtn" onclick="openSettings()">⚙️</div>
     </div>
@@ -567,6 +576,7 @@
     <div class="view" id="view-tools">
       <div id="toolsArea">
         <div id="toolsHome">
+          <div id="pinnedShortcuts" style="display:none;"></div>
           <div class="tool-section-title">🧮 محاسبات کاربردی</div>
           <div class="tool-list">
             <div class="tool-row" onclick="openTool('bmi')">
@@ -601,6 +611,35 @@
             </div>
           </div>
 
+          <div class="tool-section-title">💰 مالی و روزمره</div>
+          <div class="tool-list">
+            <div class="tool-row" onclick="openTool('loan')">
+              <div class="ticon" style="background:rgba(211,104,76,0.14); color:var(--rust);">🏦</div>
+              <div class="trow-mid"><div class="tname">وام و اقساط</div><div class="tdesc">مبلغ هر قسط و کل سود پرداختی</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('deposit')">
+              <div class="ticon" style="background:rgba(89,195,180,0.14); color:var(--teal);">💵</div>
+              <div class="trow-mid"><div class="tname">سود سپرده بانکی</div><div class="tdesc">سود ماهانه و کل سپرده</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('split')">
+              <div class="ticon" style="background:rgba(217,178,76,0.14); color:var(--gold);">🧾</div>
+              <div class="trow-mid"><div class="tname">تقسیم صورت‌حساب (دنگی)</div><div class="tdesc">سهم هر نفر با احتساب انعام</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('trade')">
+              <div class="ticon" style="background:rgba(156,141,224,0.14); color:var(--violet);">📈</div>
+              <div class="trow-mid"><div class="tname">سود و زیان معامله</div><div class="tdesc">خرید و فروش ارز، طلا یا هرچیز دیگه</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('duration')">
+              <div class="ticon" style="background:rgba(111,177,217,0.14); color:var(--sky);">⏳</div>
+              <div class="trow-mid"><div class="tname">فاصله بین دو تاریخ/ساعت</div><div class="tdesc">چند روز، ساعت و دقیقه فاصله‌ست</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+          </div>
+
           <div class="tool-section-title">🔐 QR و امنیت</div>
           <div class="tool-list">
             <div class="tool-row" onclick="openTool('qr')">
@@ -621,6 +660,11 @@
             <div class="tool-row" onclick="openTool('stego')">
               <div class="ticon" style="background:rgba(211,104,76,0.14); color:var(--rust);">🖼️</div>
               <div class="trow-mid"><div class="tname">مخفی‌سازی متن در عکس</div><div class="tdesc">پنهان کردن و استخراج پیام</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('lock')">
+              <div class="ticon" style="background:rgba(217,178,76,0.14); color:var(--gold);">🔐</div>
+              <div class="trow-mid"><div class="tname">رمزنگاری متن</div><div class="tdesc">قفل کردن متن با رمز عبور</div></div>
               <div class="tarrow">‹</div>
             </div>
           </div>
@@ -890,18 +934,142 @@
           </div>
         </div>
 
+        <!-- Loan / Installment Calculator -->
+        <div class="toolpage" id="tool-loan">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">مبلغ وام (تومان)</div>
+          <input class="field" id="loanAmount" type="number" placeholder="مثلاً 100000000">
+          <div class="field-row">
+            <div><div class="field-label">نرخ سود سالانه (٪)</div><input class="field" id="loanRate" type="number" placeholder="مثلاً 18"></div>
+            <div><div class="field-label">تعداد اقساط (ماه)</div><input class="field" id="loanMonths" type="number" placeholder="مثلاً 36"></div>
+          </div>
+          <button class="btn-primary" onclick="calcLoan()">محاسبه قسط</button>
+          <div class="result-box" id="loanResultBox">
+            <div class="result-big" id="loanMain" style="font-size:26px; font-weight:700;">--</div>
+            <div class="result-sub">مبلغ هر قسط ماهانه</div>
+            <div class="age-stats">
+              <div class="age-stat"><b id="loanTotal">--</b><span>کل بازپرداخت</span></div>
+              <div class="age-stat"><b id="loanInterest">--</b><span>کل سود پرداختی</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bank Deposit Calculator -->
+        <div class="toolpage" id="tool-deposit">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">مبلغ سپرده (تومان)</div>
+          <input class="field" id="depAmount" type="number" placeholder="مثلاً 50000000">
+          <div class="field-row">
+            <div><div class="field-label">نرخ سود سالانه (٪)</div><input class="field" id="depRate" type="number" placeholder="مثلاً 23"></div>
+            <div><div class="field-label">مدت (ماه)</div><input class="field" id="depMonths" type="number" placeholder="مثلاً 12"></div>
+          </div>
+          <button class="btn-primary" onclick="calcDeposit()">محاسبه سود</button>
+          <div class="result-box" id="depResultBox">
+            <div class="result-big" id="depMonthly" style="font-size:26px; font-weight:700;">--</div>
+            <div class="result-sub">سود ماهانه</div>
+            <div class="age-stats">
+              <div class="age-stat"><b id="depTotal">--</b><span>کل سود دوره</span></div>
+              <div class="age-stat"><b id="depFinal">--</b><span>مبلغ نهایی سپرده</span></div>
+            </div>
+            <div class="hint" style="margin-bottom:0;">محاسبه بر پایه سود ساده (غیرمرکب) است، مشابه روش رایج بانک‌ها.</div>
+          </div>
+        </div>
+
+        <!-- Bill Split Calculator -->
+        <div class="toolpage" id="tool-split">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">مبلغ کل صورت‌حساب (تومان)</div>
+          <input class="field" id="splitAmount" type="number" placeholder="مثلاً 1200000">
+          <div class="field-row">
+            <div><div class="field-label">تعداد نفرات</div><input class="field" id="splitPeople" type="number" placeholder="مثلاً 4"></div>
+            <div><div class="field-label">درصد انعام (اختیاری)</div><input class="field" id="splitTip" type="number" placeholder="مثلاً 10"></div>
+          </div>
+          <button class="btn-primary" onclick="calcSplit()">محاسبه سهم هرنفر</button>
+          <div class="result-box" id="splitResultBox">
+            <div class="result-big" id="splitMain" style="font-size:26px; font-weight:700;">--</div>
+            <div class="result-sub">سهم هر نفر</div>
+            <div class="result-sub" id="splitSub" style="margin-top:8px;"></div>
+          </div>
+        </div>
+
+        <!-- Trade Profit/Loss Calculator -->
+        <div class="toolpage" id="tool-trade">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-row">
+            <div><div class="field-label">قیمت خرید (هر واحد)</div><input class="field" id="tradeBuy" type="number"></div>
+            <div><div class="field-label">قیمت فعلی/فروش (هر واحد)</div><input class="field" id="tradeSell" type="number"></div>
+          </div>
+          <div class="field-label">مقدار (تعداد واحد)</div>
+          <input class="field" id="tradeQty" type="number" value="1">
+          <button class="btn-primary" onclick="calcTrade()">محاسبه سود و زیان</button>
+          <div class="result-box" id="tradeResultBox">
+            <div class="result-big" id="tradeMain" style="font-size:26px; font-weight:700;">--</div>
+            <div class="result-tag" id="tradeTag" style="margin-top:10px;">--</div>
+          </div>
+        </div>
+
+        <!-- Duration Calculator -->
+        <div class="toolpage" id="tool-duration">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">تاریخ و ساعت شروع (شمسی)</div>
+          <div class="shamsi-selector">
+            <select id="durStartY" class="tool-select"></select>
+            <select id="durStartM" class="tool-select" onchange="updateDurDays('start')">
+              <option value="1">فروردین</option><option value="2">اردیبهشت</option><option value="3">خرداد</option>
+              <option value="4">تیر</option><option value="5">مرداد</option><option value="6">شهریور</option>
+              <option value="7">مهر</option><option value="8">آبان</option><option value="9">آذر</option>
+              <option value="10">دی</option><option value="11">بهمن</option><option value="12">اسفند</option>
+            </select>
+            <select id="durStartD" class="tool-select"></select>
+          </div>
+          <input class="field" id="durStartTime" type="time" value="00:00">
+
+          <div class="field-label" style="margin-top:6px;">تاریخ و ساعت پایان (شمسی)</div>
+          <div class="shamsi-selector">
+            <select id="durEndY" class="tool-select"></select>
+            <select id="durEndM" class="tool-select" onchange="updateDurDays('end')">
+              <option value="1">فروردین</option><option value="2">اردیبهشت</option><option value="3">خرداد</option>
+              <option value="4">تیر</option><option value="5">مرداد</option><option value="6">شهریور</option>
+              <option value="7">مهر</option><option value="8">آبان</option><option value="9">آذر</option>
+              <option value="10">دی</option><option value="11">بهمن</option><option value="12">اسفند</option>
+            </select>
+            <select id="durEndD" class="tool-select"></select>
+          </div>
+          <input class="field" id="durEndTime" type="time" value="00:00">
+
+          <button class="btn-primary" onclick="calcDuration()">محاسبه فاصله</button>
+          <div class="result-box" id="durResultBox">
+            <div class="result-big" id="durMain" style="font-size:24px; font-weight:700;">--</div>
+            <div class="age-stats">
+              <div class="age-stat"><b id="durDays">--</b><span>کل روزها</span></div>
+              <div class="age-stat"><b id="durHours">--</b><span>کل ساعت‌ها</span></div>
+              <div class="age-stat"><b id="durMinutes">--</b><span>کل دقیقه‌ها</span></div>
+            </div>
+          </div>
+        </div>
+
         <!-- Password Generator Tool -->
         <div class="toolpage" id="tool-pass">
           <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">سطح رمز عبور</div>
+          <div class="chip-row" id="passLevelChips">
+            <div class="chip on" data-lv="custom" onclick="setPassLevel('custom')">دستی</div>
+            <div class="chip" data-lv="medium" onclick="setPassLevel('medium')">متوسط</div>
+            <div class="chip" data-lv="strong" onclick="setPassLevel('strong')">قوی</div>
+            <div class="chip" data-lv="advanced" onclick="setPassLevel('advanced')">پیشرفته</div>
+          </div>
           <div class="field-label">طول رمز عبور: <b id="passLenLabel" style="color:var(--violet);">16</b></div>
-          <input class="field range-input" id="passLen" type="range" min="6" max="150" value="16" oninput="updatePassLenSlider(this)">
+          <input class="field range-input" id="passLen" type="range" min="6" max="150" value="16" oninput="updatePassLenSlider(this); setPassLevel('custom', true);">
           <div class="chip-row">
-            <div class="chip on" id="passUpper" onclick="this.classList.toggle('on')">حروف بزرگ ABC</div>
-            <div class="chip on" id="passLower" onclick="this.classList.toggle('on')">حروف کوچک abc</div>
+            <div class="chip on" id="passUpper" onclick="this.classList.toggle('on'); setPassLevel('custom', true);">حروف بزرگ ABC</div>
+            <div class="chip on" id="passLower" onclick="this.classList.toggle('on'); setPassLevel('custom', true);">حروف کوچک abc</div>
           </div>
           <div class="chip-row">
-            <div class="chip on" id="passNum" onclick="this.classList.toggle('on')">اعداد 123</div>
-            <div class="chip on" id="passSym" onclick="this.classList.toggle('on')">نشانه‌ها !@#</div>
+            <div class="chip on" id="passNum" onclick="this.classList.toggle('on'); setPassLevel('custom', true);">اعداد 123</div>
+            <div class="chip on" id="passSym" onclick="this.classList.toggle('on'); setPassLevel('custom', true);">نشانه‌ها !@#</div>
+          </div>
+          <div class="chip-row">
+            <div class="chip" id="passNoAmbig" onclick="this.classList.toggle('on')">حذف کاراکترهای مشابه (O/0 ، l/1/I)</div>
           </div>
           <button class="btn-primary" onclick="generatePassword()">🔑 تولید رمز عبور</button>
           <div class="result-box" id="passResultBox">
@@ -937,6 +1105,41 @@
             <div class="result-box" id="stegoRevealBox">
               <div class="field-label" style="text-align:right;">متن استخراج‌شده:</div>
               <div class="field" style="word-break:break-all; white-space:pre-wrap;" id="stegoRevealedText">--</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Text Encryption Tool -->
+        <div class="toolpage" id="tool-lock">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="chip-row">
+            <div class="chip on" data-lk="enc" onclick="setLockMode('enc')">قفل کردن متن</div>
+            <div class="chip" data-lk="dec" onclick="setLockMode('dec')">باز کردن متن</div>
+          </div>
+          <div class="hint" style="margin-top:0;">با رمزنگاری AES-256 واقعی محافظت می‌شه. اگه رمز عبور رو فراموش کنی، هیچ راهی برای بازیابی متن نیست.</div>
+
+          <div id="lock-enc">
+            <div class="field-label">متن اصلی</div>
+            <textarea class="field" id="lockPlainText" rows="3" style="resize:vertical;"></textarea>
+            <div class="field-label">رمز عبور</div>
+            <input class="field" id="lockPassEnc" type="password">
+            <button class="btn-primary" onclick="encryptTextTool()">🔒 قفل کردن متن</button>
+            <div class="result-box" id="lockEncResultBox">
+              <div class="field-label" style="text-align:right;">متن قفل‌شده (کپی کن و بفرست):</div>
+              <div class="field" id="lockEncOutput" style="word-break:break-all; white-space:pre-wrap;">--</div>
+              <button class="btn-secondary" onclick="copyLockOutput()">📋 کپی متن قفل‌شده</button>
+            </div>
+          </div>
+
+          <div id="lock-dec" style="display:none;">
+            <div class="field-label">متن قفل‌شده</div>
+            <textarea class="field" id="lockCipherText" rows="3" style="resize:vertical;"></textarea>
+            <div class="field-label">رمز عبور</div>
+            <input class="field" id="lockPassDec" type="password">
+            <button class="btn-primary" onclick="decryptTextTool()">🔓 باز کردن متن</button>
+            <div class="result-box" id="lockDecResultBox">
+              <div class="field-label" style="text-align:right;">متن اصلی:</div>
+              <div class="field" id="lockDecOutput" style="word-break:break-all; white-space:pre-wrap;">--</div>
             </div>
           </div>
         </div>
@@ -977,6 +1180,18 @@
   </div>
 </div>
 
+<div id="historyOverlay" onclick="if(event.target===this) closeHistory()">
+  <div id="historySheet" class="sheet-box">
+    <h3>🕐 تاریخچه محاسبات</h3>
+    <p>روی هر مورد بزن تا نتیجه‌اش وارد ماشین‌حساب بشه.</p>
+    <div id="historyList" style="display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto; margin-bottom:14px;"></div>
+    <div class="row2">
+      <button class="act close" onclick="clearHistory()">🗑️ پاک کردن همه</button>
+      <button class="act save" onclick="closeHistory()">بستن</button>
+    </div>
+  </div>
+</div>
+
 <script>
 let theme = "dark";
 
@@ -998,7 +1213,7 @@ async function loadState(){
   return null;
 }
 async function saveState(){
-  try{ localStorage.setItem('state', JSON.stringify({ marketRates, goldIran, theme })); }catch(e){}
+  try{ localStorage.setItem('state', JSON.stringify({ marketRates, goldIran, theme, pinnedTools, calcHistory })); }catch(e){}
 }
 function initTheme(){ document.documentElement.setAttribute('data-theme', theme); }
 function toggleTheme(){ theme = theme === "dark" ? "light" : "dark"; initTheme(); saveState(); }
@@ -1035,7 +1250,12 @@ function append(ch){
 function insertNumber(numStr){ expr += (expr === "" ? "" : (/[0-9)]$/.test(expr) ? "×" : "")) + numStr; render(); switchView('calc'); }
 function clearAll(){ expr = ""; render(); }
 function backspace(){ expr = expr.slice(0,-1); render(); }
-function doEquals(){ let v = safeEval(expr); expr = isNaN(v) ? "" : String(Math.round(v*1e8)/1e8); render(); }
+function doEquals(){
+  let v = safeEval(expr);
+  if(!isNaN(v) && expr.trim() !== ""){ pushHistory(expr, fmt(Math.round(v*1e8)/1e8)); }
+  expr = isNaN(v) ? "" : String(Math.round(v*1e8)/1e8);
+  render();
+}
 function currentValue(){ let v = safeEval(expr); return isNaN(v) ? 0 : v; }
 
 function applyFn(fn){
@@ -1159,7 +1379,84 @@ function saveAllSettings(){
 }
 
 /* --- Functional Tools --- */
-function openTool(name){ document.getElementById('toolsHome').style.display='none'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); document.getElementById('tool-'+name).classList.add('on'); if(name=='age') initShamsiSelectors(); if(name=='convdate') updateConvSelectors(); if(name=='unit') initUnitSelectors(); if(name=='pass') updatePassLenSlider(document.getElementById('passLen')); }
+const TOOL_META = {
+  bmi:{icon:'⚖️',name:'BMI'}, age:{icon:'🎂',name:'محاسبه سن'}, convdate:{icon:'📅',name:'تبدیل تاریخ'},
+  percent:{icon:'٪',name:'درصدگیری'}, discount:{icon:'🏷️',name:'تخفیف'}, unit:{icon:'📐',name:'مبدل واحد'},
+  loan:{icon:'🏦',name:'وام'}, deposit:{icon:'💵',name:'سود سپرده'}, split:{icon:'🧾',name:'دنگی'},
+  trade:{icon:'📈',name:'سود معامله'}, duration:{icon:'⏳',name:'فاصله تاریخ'},
+  qr:{icon:'🔳',name:'ساخت QR'}, scan:{icon:'📷',name:'اسکن QR'}, pass:{icon:'🔑',name:'رمز عبور'},
+  stego:{icon:'🖼️',name:'مخفی‌سازی'}, lock:{icon:'🔐',name:'رمزنگاری'}
+};
+let pinnedTools = [];
+function setupPinStars(){
+  document.querySelectorAll('.tool-row').forEach(row=>{
+    if(row.querySelector('.tool-star')) return; // already set up
+    const attr = row.getAttribute('onclick') || '';
+    const m = attr.match(/openTool\('(\w+)'\)/);
+    if(!m) return;
+    const id = m[1];
+    const star = document.createElement('div');
+    star.className = 'tool-star' + (pinnedTools.includes(id) ? ' on' : '');
+    star.textContent = pinnedTools.includes(id) ? '⭐' : '☆';
+    star.onclick = (e)=>{ e.stopPropagation(); togglePin(id); };
+    row.insertBefore(star, row.querySelector('.tarrow'));
+  });
+}
+function togglePin(id){
+  const i = pinnedTools.indexOf(id);
+  if(i>-1) pinnedTools.splice(i,1); else pinnedTools.push(id);
+  document.querySelectorAll('.tool-row').forEach(row=>{
+    const attr = row.getAttribute('onclick') || '';
+    const m = attr.match(/openTool\('(\w+)'\)/);
+    if(!m || m[1]!==id) return;
+    const star = row.querySelector('.tool-star');
+    star.classList.toggle('on', pinnedTools.includes(id));
+    star.textContent = pinnedTools.includes(id) ? '⭐' : '☆';
+  });
+  renderPinnedShortcuts();
+  saveState();
+}
+function renderPinnedShortcuts(){
+  const box = document.getElementById('pinnedShortcuts');
+  if(pinnedTools.length === 0){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display = 'block';
+  box.innerHTML = '<div class="tool-section-title" style="margin-top:0;">⭐ میانبرها</div><div class="pinned-row"></div>';
+  const row = box.querySelector('.pinned-row');
+  pinnedTools.forEach(id=>{
+    const meta = TOOL_META[id]; if(!meta) return;
+    const item = document.createElement('div');
+    item.className = 'pinned-item';
+    item.innerHTML = `<div class="ticon" style="background:var(--surface2);">${meta.icon}</div><div class="pname">${meta.name}</div>`;
+    item.onclick = ()=> openTool(id);
+    row.appendChild(item);
+  });
+}
+
+/* --- Calculator History --- */
+let calcHistory = [];
+function pushHistory(exprStr, resultStr){
+  if(calcHistory.length && calcHistory[0].e === exprStr) return;
+  calcHistory.unshift({ e: exprStr, r: resultStr });
+  if(calcHistory.length > 30) calcHistory.pop();
+  saveState();
+}
+function openHistory(){
+  const list = document.getElementById('historyList');
+  list.innerHTML = calcHistory.length ? '' : '<div class="hint" style="margin:0;">هنوز محاسبه‌ای ثبت نشده.</div>';
+  calcHistory.forEach(h=>{
+    const row = document.createElement('div');
+    row.className = 'field';
+    row.style.cursor = 'pointer';
+    row.innerHTML = `<div style="font-size:11px; color:var(--muted);">${h.e}</div><div style="font-size:16px; font-weight:700; color:var(--amber);">= ${h.r}</div>`;
+    row.onclick = ()=>{ insertNumber(h.r.replace(/,/g,'')); closeHistory(); };
+    list.appendChild(row);
+  });
+  document.getElementById('historyOverlay').classList.add('on');
+}
+function closeHistory(){ document.getElementById('historyOverlay').classList.remove('on'); }
+function clearHistory(){ calcHistory = []; saveState(); openHistory(); }
+
+function openTool(name){ document.getElementById('toolsHome').style.display='none'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); document.getElementById('tool-'+name).classList.add('on'); if(name=='age') initShamsiSelectors(); if(name=='convdate') updateConvSelectors(); if(name=='unit') initUnitSelectors(); if(name=='pass') updatePassLenSlider(document.getElementById('passLen')); if(name=='duration') initDurationSelectors(); }
 function closeTool(){ document.getElementById('toolsHome').style.display='block'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); }
 function numOf(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; }
 
@@ -1525,233 +1822,4 @@ function handleScanResult(text){
   };
   const addLink = (label, href)=>{
     const a = document.createElement('a');
-    a.className = 'btn-primary'; a.style.marginBottom='0'; a.style.display='block'; a.style.textDecoration='none'; a.style.textAlign='center';
-    a.textContent = label; a.href = href; a.target = '_blank'; a.rel = 'noopener';
-    actions.appendChild(a);
-  };
-
-  if(/^https?:\/\//i.test(text)){
-    if(/wa\.me|api\.whatsapp\.com/i.test(text)) addLink('🟢 باز کردن در واتساپ', text);
-    else if(/t\.me\//i.test(text)) addLink('✈️ باز کردن در تلگرام', text);
-    else if(/instagram\.com/i.test(text)) addLink('📷 باز کردن اینستاگرام', text);
-    else addLink('🌐 باز کردن سایت', text);
-  } else if(/^tel:/i.test(text)){
-    const num = text.replace(/^tel:/i,'');
-    addLink('📞 تماس بگیر', text);
-    addLink('💬 ارسال پیامک', 'sms:'+num);
-  } else if(/^SMSTO:/i.test(text)){
-    const parts = text.split(':'); const num = parts[1]; const msg = parts.slice(2).join(':');
-    addLink('💬 ارسال پیامک به ' + num, `sms:${num}${msg? '?body='+encodeURIComponent(msg):''}`);
-  } else if(/^WIFI:/i.test(text)){
-    const ssidM = text.match(/S:([^;]*);/); const passM = text.match(/P:([^;]*);/);
-    const ssid = ssidM ? ssidM[1] : '—'; const pass = passM ? passM[1] : '';
-    document.getElementById('scanRawText').textContent = `شبکه: ${ssid}\nرمز: ${pass || '(بدون رمز)'}`;
-    addBtn('📋 کپی رمز وای‌فای', ()=>{ navigator.clipboard?.writeText(pass).then(()=> alert('رمز کپی شد. حالا از تنظیمات وای‌فای گوشی، شبکه را انتخاب و رمز را وارد کن (اتصال خودکار از طریق مرورگر ممکن نیست).')); });
-  } else if(/^BEGIN:VCARD/i.test(text)){
-    addBtn('👤 افزودن به مخاطبین', ()=>{
-      const blob = new Blob([text], {type:'text/vcard'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'contact.vcf'; a.click();
-      URL.revokeObjectURL(url);
-    });
-  } else {
-    addBtn('📋 کپی متن', ()=>{ navigator.clipboard?.writeText(text).then(()=> alert('متن کپی شد.')); });
-  }
-  document.getElementById('scanResultBox').classList.add('on');
-}
-
-/* --- Unit Converter --- */
-const UNIT_DATA = {
-  length: { units:{mm:0.001,cm:0.01,m:1,km:1000,in:0.0254,ft:0.3048,yd:0.9144,mi:1609.344}, names:{mm:'میلی‌متر',cm:'سانتی‌متر',m:'متر',km:'کیلومتر',in:'اینچ',ft:'فوت',yd:'یارد',mi:'مایل'} },
-  weight: { units:{mg:1e-6,g:0.001,kg:1,ton:1000,lb:0.45359237,oz:0.028349523}, names:{mg:'میلی‌گرم',g:'گرم',kg:'کیلوگرم',ton:'تن',lb:'پوند',oz:'اونس'} },
-  volume: { units:{ml:0.001,l:1,m3:1000,galUS:3.785411784,cupUS:0.2365882365}, names:{ml:'میلی‌لیتر',l:'لیتر',m3:'مترمکعب',galUS:'گالن آمریکایی',cupUS:'فنجان آمریکایی'} },
-  digital: { units:{bit:0.125,B:1,KB:1024,MB:1048576,GB:1073741824,TB:1099511627776}, names:{bit:'بیت',B:'بایت',KB:'کیلوبایت',MB:'مگابایت',GB:'گیگابایت',TB:'ترابایت'} },
-  temp: { special:true, units:{C:1,F:1,K:1}, names:{C:'سلسیوس',F:'فارنهایت',K:'کلوین'} }
-};
-let unitCat = 'length';
-function setUnitCat(c){
-  unitCat = c;
-  document.querySelectorAll('#unitChips .chip').forEach(el=> el.classList.toggle('on', el.dataset.c===c));
-  populateUnitSelects();
-  computeUnit();
-}
-function populateUnitSelects(){
-  const data = UNIT_DATA[unitCat];
-  const keys = Object.keys(data.units);
-  const fromSel = document.getElementById('unitFrom'), toSel = document.getElementById('unitTo');
-  fromSel.innerHTML = ""; toSel.innerHTML = "";
-  keys.forEach((k,i)=>{
-    fromSel.appendChild(new Option(data.names[k], k, i===0, i===0));
-    toSel.appendChild(new Option(data.names[k], k, i===1, i===1));
-  });
-}
-function initUnitSelectors(){ populateUnitSelects(); computeUnit(); }
-function tempConvert(v, from, to){
-  let c;
-  if(from==='C') c=v; else if(from==='F') c=(v-32)*5/9; else c=v-273.15;
-  if(to==='C') return c; if(to==='F') return c*9/5+32; return c+273.15;
-}
-function computeUnit(){
-  const v = parseFloat(document.getElementById('unitValue').value);
-  const from = document.getElementById('unitFrom').value, to = document.getElementById('unitTo').value;
-  const out = document.getElementById('unitResult');
-  if(isNaN(v)){ out.textContent = '--'; return; }
-  let result;
-  if(UNIT_DATA[unitCat].special){ result = tempConvert(v, from, to); }
-  else { const data = UNIT_DATA[unitCat].units; result = v * data[from] / data[to]; }
-  out.textContent = fmt(Math.round(result*1e6)/1e6) + ' ' + UNIT_DATA[unitCat].names[to];
-}
-function swapUnit(){
-  const fromSel = document.getElementById('unitFrom'), toSel = document.getElementById('unitTo');
-  const tmp = fromSel.value; fromSel.value = toSel.value; toSel.value = tmp;
-  computeUnit();
-}
-
-/* --- Password Generator --- */
-function updatePassLenSlider(el){
-  const min = parseFloat(el.min), max = parseFloat(el.max), val = parseFloat(el.value);
-  const pct = ((val - min) / (max - min)) * 100;
-  el.style.background = `linear-gradient(to right, var(--violet) 0%, var(--violet) ${pct}%, var(--surface2) ${pct}%, var(--surface2) 100%)`;
-  document.getElementById('passLenLabel').textContent = val;
-}
-function generatePassword(){
-  const len = parseInt(document.getElementById('passLen').value);
-  const useUpper = document.getElementById('passUpper').classList.contains('on');
-  const useLower = document.getElementById('passLower').classList.contains('on');
-  const useNum = document.getElementById('passNum').classList.contains('on');
-  const useSym = document.getElementById('passSym').classList.contains('on');
-  const sets = [];
-  if(useUpper) sets.push('ABCDEFGHJKLMNPQRSTUVWXYZ');
-  if(useLower) sets.push('abcdefghijkmnpqrstuvwxyz');
-  if(useNum) sets.push('23456789');
-  if(useSym) sets.push('!@#$%^&*()-_=+?');
-  if(sets.length===0){ alert('حداقل یک نوع کاراکتر را انتخاب کن.'); return; }
-  const all = sets.join('');
-  const arr = new Uint32Array(len);
-  crypto.getRandomValues(arr);
-  let pass = '';
-  // guarantee at least one char from each selected set
-  sets.forEach((s,i)=>{ pass += s[arr[i] % s.length]; });
-  for(let i=sets.length; i<len; i++){ pass += all[arr[i] % all.length]; }
-  // shuffle
-  pass = pass.split('').sort(()=> 0.5 - Math.random()).join('').slice(0, len);
-  document.getElementById('passOutput').textContent = pass;
-  let score = 0;
-  if(len>=12) score++; if(len>=16) score++;
-  if(sets.length>=3) score++; if(sets.length===4) score++;
-  const tag = document.getElementById('passStrength');
-  const levels = [
-    {t:'ضعیف', c:'var(--danger)'}, {t:'متوسط', c:'var(--gold)'}, {t:'خوب', c:'var(--sky)'}, {t:'قوی', c:'var(--teal)'}, {t:'خیلی قوی', c:'var(--teal)'}
-  ];
-  const lv = levels[Math.min(score, 4)];
-  tag.textContent = lv.t; tag.style.background = lv.c; tag.style.color = '#12201C';
-  document.getElementById('passResultBox').classList.add('on');
-}
-function copyPassword(){
-  const p = document.getElementById('passOutput').textContent;
-  if(!p || p==='--') return;
-  navigator.clipboard?.writeText(p).then(()=> alert('رمز کپی شد.'));
-}
-
-/* --- Steganography (LSB) --- */
-function setStegoMode(m){
-  document.querySelectorAll('#tool-stego .chip').forEach(el=> el.classList.toggle('on', el.dataset.s===m));
-  document.getElementById('stego-hide').style.display = m==='hide' ? 'block' : 'none';
-  document.getElementById('stego-reveal').style.display = m==='reveal' ? 'block' : 'none';
-}
-let stegoImg = null;
-function loadStegoImage(e){
-  const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev)=>{ const img = new Image(); img.onload = ()=>{ stegoImg = img; }; img.src = ev.target.result; };
-  reader.readAsDataURL(file);
-}
-function strToBits(str){
-  const bytes = new TextEncoder().encode(str);
-  let bits = [];
-  // 32-bit length header
-  for(let i=31;i>=0;i--) bits.push((bytes.length >> i) & 1);
-  bytes.forEach(b=>{ for(let i=7;i>=0;i--) bits.push((b >> i) & 1); });
-  return bits;
-}
-function hideStegoText(){
-  if(!stegoImg){ alert('اول یک عکس انتخاب کن.'); return; }
-  const text = document.getElementById('stegoHideText').value;
-  if(!text){ alert('متن مخفی را وارد کن.'); return; }
-  const canvas = document.getElementById('stegoCanvas');
-  canvas.width = stegoImg.width; canvas.height = stegoImg.height;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(stegoImg, 0, 0);
-  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const bits = strToBits(text);
-  const capacity = imgData.data.length / 4 * 3; // 3 channels per pixel (skip alpha)
-  if(bits.length > capacity){ alert('این متن برای این عکس خیلی طولانیه؛ عکس بزرگتری انتخاب کن یا متن را کوتاه‌تر کن.'); return; }
-  let bitIdx = 0;
-  for(let i=0; i<imgData.data.length && bitIdx<bits.length; i+=4){
-    for(let ch=0; ch<3 && bitIdx<bits.length; ch++){
-      imgData.data[i+ch] = (imgData.data[i+ch] & 0xFE) | bits[bitIdx];
-      bitIdx++;
-    }
-  }
-  ctx.putImageData(imgData, 0, 0);
-  const preview = document.getElementById('stegoHidePreview');
-  preview.innerHTML = '';
-  const img = document.createElement('img');
-  img.src = canvas.toDataURL('image/png');
-  img.style.maxWidth = '100%'; img.style.borderRadius = '12px';
-  preview.appendChild(img);
-  preview.style.display = 'block';
-  document.getElementById('stegoDownloadBtn').style.display = 'block';
-}
-function downloadStego(){
-  const canvas = document.getElementById('stegoCanvas');
-  const link = document.createElement('a');
-  link.download = 'hidden-message.png';
-  link.href = canvas.toDataURL('image/png');
-  link.click();
-}
-function revealStegoText(e){
-  const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev)=>{
-    const img = new Image();
-    img.onload = ()=>{
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width; canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      let bits = [];
-      for(let i=0; i<imgData.data.length; i+=4){
-        for(let ch=0; ch<3; ch++) bits.push(imgData.data[i+ch] & 1);
-      }
-      let len = 0;
-      for(let i=0;i<32;i++) len = (len<<1) | bits[i];
-      if(len <= 0 || len > (bits.length-32)/8){
-        document.getElementById('stegoRevealedText').textContent = 'متنی پیدا نشد (این عکس شاید حاوی پیام مخفی نیست یا فشرده شده).';
-      } else {
-        const byteArr = new Uint8Array(len);
-        for(let i=0;i<len;i++){
-          let byte = 0;
-          for(let b=0;b<8;b++){ byte = (byte<<1) | bits[32 + i*8 + b]; }
-          byteArr[i] = byte;
-        }
-        document.getElementById('stegoRevealedText').textContent = new TextDecoder().decode(byteArr);
-      }
-      document.getElementById('stegoRevealBox').classList.add('on');
-    };
-    img.src = ev.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-/* --- Initialization --- */
-async function init(){
-  const saved = await loadState(); if(saved){ if(saved.marketRates) marketRates = Object.assign(marketRates, saved.marketRates); if(saved.goldIran) goldIran = Object.assign(goldIran, saved.goldIran); if(saved.theme) theme = saved.theme; }
-  initTheme(); render(); renderMarketCards(); renderGoldIranCards(); renderGlobalCards(FALLBACK_FX, 'USD'); renderGoldCards(FALLBACK_GOLD.xau, FALLBACK_GOLD.xag); renderCryptoCards(FALLBACK_CRYPTO);
-  fetchGlobalRates(); fetchGoldRates(); fetchCryptoRates();
-}
-init();
-</script>
-</body>
-</html>
+    a.className = 'btn-primary'; a.style.marginBottom='0'; a.style.display='block'; a.style.textDecoration='none'; a.style.te
