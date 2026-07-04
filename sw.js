@@ -1,4 +1,4 @@
-const CACHE_NAME = "calc-arz-v2";
+const CACHE_NAME = "calc-arz-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,7 +8,8 @@ const ASSETS = [
 ];
 // Static third-party libraries worth caching for offline use (unlike live price APIs)
 const CACHEABLE_CROSS_ORIGIN = [
-  "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+  "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"
 ];
 
 self.addEventListener("install", (event) => {
