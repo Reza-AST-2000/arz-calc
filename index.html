@@ -12,6 +12,7 @@
 <link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root[data-theme="dark"] {
     --bg:#0B1210;
@@ -59,7 +60,7 @@
     transition: background 0.3s, color 0.3s;
   }
   #app{
-    width:100%; max-width:460px; height:100vh;
+    width:100%; max-width:460px; height:100vh; height:calc(var(--app-height, 100vh));
     display:flex; flex-direction:column;
     position:relative;
     box-shadow: 0 0 70px rgba(0,0,0,0.25);
@@ -363,6 +364,25 @@
   .shamsi-selector { display:flex; gap:8px; margin-bottom:14px; }
   .shamsi-selector select, .tool-select { flex:1; background:var(--surface2); color:var(--text); border:1px solid var(--line); border-radius:12px; padding:12px; font-family:'Vazirmatn'; font-size:14px; outline:none; }
   .tool-select { width: 100%; margin-bottom: 14px; }
+
+  /* ---- QR tool ---- */
+  .qr-type-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:18px; }
+  .qr-type{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    padding:10px 4px; border-radius:14px; border:1px solid var(--line);
+    background:var(--surface); cursor:pointer;
+  }
+  .qr-type .qi{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:17px; background:var(--surface2); }
+  .qr-type .qn{ font-size:10px; font-weight:700; color:var(--muted); }
+  .qr-type.on{ border-color:var(--teal); background:rgba(89,195,180,0.10); }
+  .qr-type.on .qn{ color:var(--teal); }
+  .qr-fields{ display:none; }
+  .qr-fields.on{ display:block; }
+  #qrCanvasBox{ display:flex; justify-content:center; padding:18px; background:#fff; border-radius:16px; margin-bottom:14px; }
+  .btn-secondary{
+    width:100%; padding:12px 0; border-radius:12px; border:1px solid var(--line); cursor:pointer;
+    font-weight:700; font-size:13px; margin-bottom:10px; background:var(--surface2); color:var(--text);
+  }
 </style>
 </head>
 <body>
@@ -528,6 +548,10 @@
               <div class="ticon" style="background:rgba(211,104,76,0.14); color:var(--rust);">🏷️</div>
               <div class="tname">تخفیف و مالیات</div>
             </div>
+            <div class="tool-card" onclick="openTool('qr')">
+              <div class="ticon" style="background:rgba(89,195,180,0.14); color:var(--teal);">🔳</div>
+              <div class="tname">ساخت QR کد</div>
+            </div>
           </div>
         </div>
 
@@ -663,6 +687,77 @@
           </div>
         </div>
 
+        <!-- QR Tool -->
+        <div class="toolpage" id="tool-qr">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">نوع QR کد را انتخاب کنید:</div>
+          <div class="qr-type-grid" id="qrTypeGrid">
+            <div class="qr-type on" data-t="url" onclick="setQrType('url')"><div class="qi" style="color:#2D8A6E;">🌐</div><div class="qn">وبسایت</div></div>
+            <div class="qr-type" data-t="text" onclick="setQrType('text')"><div class="qi" style="color:#3B5BDB;">✎</div><div class="qn">متن</div></div>
+            <div class="qr-type" data-t="wifi" onclick="setQrType('wifi')"><div class="qi" style="color:#D9B24C;">📶</div><div class="qn">وای‌فای</div></div>
+            <div class="qr-type" data-t="sms" onclick="setQrType('sms')"><div class="qi" style="color:#3B5BDB;">💬</div><div class="qn">پیامک</div></div>
+            <div class="qr-type" data-t="tel" onclick="setQrType('tel')"><div class="qi" style="color:#D9B24C;">📞</div><div class="qn">شماره تماس</div></div>
+            <div class="qr-type" data-t="whatsapp" onclick="setQrType('whatsapp')"><div class="qi" style="color:#25D366;">🟢</div><div class="qn">واتساپ</div></div>
+            <div class="qr-type" data-t="instagram" onclick="setQrType('instagram')"><div class="qi" style="color:#D3684C;">📷</div><div class="qn">اینستاگرام</div></div>
+            <div class="qr-type" data-t="vcard" onclick="setQrType('vcard')"><div class="qi" style="color:#D3684C;">🪪</div><div class="qn">کارت ویزیت</div></div>
+          </div>
+
+          <div class="qr-fields on" id="qrf-url">
+            <div class="field-label">آدرس وبسایت</div>
+            <input class="field" id="qrUrl" placeholder="example.com">
+          </div>
+          <div class="qr-fields" id="qrf-text">
+            <div class="field-label">متن دلخواه</div>
+            <input class="field" id="qrText" placeholder="هر متنی...">
+          </div>
+          <div class="qr-fields" id="qrf-wifi">
+            <div class="field-label">نام شبکه (SSID)</div>
+            <input class="field" id="qrWifiSsid">
+            <div class="field-label">رمز عبور</div>
+            <input class="field" id="qrWifiPass">
+            <div class="field-label">نوع رمزنگاری</div>
+            <select class="tool-select" id="qrWifiEnc">
+              <option value="WPA">WPA / WPA2</option>
+              <option value="WEP">WEP</option>
+              <option value="nopass">بدون رمز</option>
+            </select>
+          </div>
+          <div class="qr-fields" id="qrf-sms">
+            <div class="field-label">شماره موبایل</div>
+            <input class="field" id="qrSmsPhone" placeholder="09xxxxxxxxx">
+            <div class="field-label">متن پیامک</div>
+            <input class="field" id="qrSmsMsg">
+          </div>
+          <div class="qr-fields" id="qrf-tel">
+            <div class="field-label">شماره تماس</div>
+            <input class="field" id="qrTelPhone" placeholder="09xxxxxxxxx">
+          </div>
+          <div class="qr-fields" id="qrf-whatsapp">
+            <div class="field-label">شماره واتساپ (با کد کشور، بدون +)</div>
+            <input class="field" id="qrWaPhone" placeholder="989xxxxxxxxx">
+            <div class="field-label">پیام (اختیاری)</div>
+            <input class="field" id="qrWaMsg">
+          </div>
+          <div class="qr-fields" id="qrf-instagram">
+            <div class="field-label">آیدی اینستاگرام (بدون @)</div>
+            <input class="field" id="qrIgUser" placeholder="username">
+          </div>
+          <div class="qr-fields" id="qrf-vcard">
+            <div class="field-label">نام و نام خانوادگی</div>
+            <input class="field" id="qrVName">
+            <div class="field-row">
+              <div><div class="field-label">شماره تماس</div><input class="field" id="qrVPhone"></div>
+              <div><div class="field-label">ایمیل</div><input class="field" id="qrVEmail"></div>
+            </div>
+            <div class="field-label">سازمان / شغل (اختیاری)</div>
+            <input class="field" id="qrVOrg">
+          </div>
+
+          <button class="btn-primary" onclick="generateQr()">ساخت QR کد</button>
+          <div id="qrCanvasBox" style="display:none;"></div>
+          <button class="btn-secondary" id="qrDownloadBtn" style="display:none;" onclick="downloadQr()">⬇ دانلود تصویر QR</button>
+        </div>
+
       </div>
     </div>
 
@@ -701,6 +796,17 @@
 
 <script>
 let theme = "dark";
+
+/* --- Real viewport height fix (prevents content hiding under Android's nav bar) --- */
+function setAppHeight(){
+  const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+  document.documentElement.style.setProperty('--app-height', h + 'px');
+}
+window.addEventListener('resize', setAppHeight);
+window.addEventListener('orientationchange', ()=> setTimeout(setAppHeight, 200));
+if(window.visualViewport){ window.visualViewport.addEventListener('resize', setAppHeight); }
+setAppHeight();
+
 let marketRates = { USD: 166000, EUR: 181000, GBP: 212000, AED: 45200, TRY: 4200, AZN: 103000, CNY: 23100 };
 let goldIran = { gram18: 16500000, bahar: 161000000 };
 
@@ -1084,6 +1190,50 @@ function calcDiscount(){
   const after = price * (1 - disc/100), finalPrice = after * (1 + tax/100);
   document.getElementById('discountMain').textContent = fmt(Math.round(finalPrice)) + ' تومان';
   document.getElementById('discountSub').textContent = `قیمت نهایی با احتساب ${disc}٪ تخفیف و ${tax}٪ مالیات`; box.classList.add('on');
+}
+
+/* --- QR Code Tool --- */
+let qrType = 'url';
+function setQrType(t){
+  qrType = t;
+  document.querySelectorAll('.qr-type').forEach(el=> el.classList.toggle('on', el.dataset.t===t));
+  document.querySelectorAll('.qr-fields').forEach(el=> el.classList.toggle('on', el.id === 'qrf-'+t));
+  document.getElementById('qrCanvasBox').style.display='none';
+  document.getElementById('qrDownloadBtn').style.display='none';
+}
+function qval(id){ return document.getElementById(id).value.trim(); }
+function generateQr(){
+  let content = "";
+  switch(qrType){
+    case 'url': { let v=qval('qrUrl'); if(!v){alert('آدرس وبسایت را وارد کنید.');return;} if(!/^https?:\/\//i.test(v)) v='https://'+v; content=v; break; }
+    case 'text': { let v=qval('qrText'); if(!v){alert('متن را وارد کنید.');return;} content=v; break; }
+    case 'wifi': { let ssid=qval('qrWifiSsid'), pass=qval('qrWifiPass'), enc=document.getElementById('qrWifiEnc').value; if(!ssid){alert('نام شبکه را وارد کنید.');return;} content = `WIFI:T:${enc};S:${ssid};P:${enc==='nopass'?'':pass};;`; break; }
+    case 'sms': { let p=qval('qrSmsPhone'), m=qval('qrSmsMsg'); if(!p){alert('شماره را وارد کنید.');return;} content = `SMSTO:${p}:${m}`; break; }
+    case 'tel': { let p=qval('qrTelPhone'); if(!p){alert('شماره را وارد کنید.');return;} content = `tel:${p}`; break; }
+    case 'whatsapp': { let p=qval('qrWaPhone'), m=qval('qrWaMsg'); if(!p){alert('شماره واتساپ را وارد کنید.');return;} content = `https://wa.me/${p.replace(/\D/g,'')}` + (m? `?text=${encodeURIComponent(m)}`:''); break; }
+    case 'instagram': { let u=qval('qrIgUser'); if(!u){alert('آیدی اینستاگرام را وارد کنید.');return;} content = `https://instagram.com/${u.replace('@','')}`; break; }
+    case 'vcard': { let n=qval('qrVName'), p=qval('qrVPhone'), e=qval('qrVEmail'), o=qval('qrVOrg'); if(!n){alert('نام را وارد کنید.');return;}
+      content = `BEGIN:VCARD\nVERSION:3.0\nFN:${n}\n${p?'TEL:'+p+'\n':''}${e?'EMAIL:'+e+'\n':''}${o?'ORG:'+o+'\n':''}END:VCARD`; break; }
+  }
+  const box = document.getElementById('qrCanvasBox');
+  box.innerHTML = "";
+  box.style.display = 'flex';
+  try{
+    if(typeof QRCode === 'undefined') throw new Error('lib not loaded');
+    new QRCode(box, { text: content, width:220, height:220, colorDark:"#12201C", colorLight:"#ffffff", correctLevel: QRCode.CorrectLevel.H });
+    document.getElementById('qrDownloadBtn').style.display = 'block';
+  }catch(e){
+    box.innerHTML = '<div style="color:#B33; padding:20px; font-size:12px; text-align:center;">ساخت QR نیاز به بار اول اتصال اینترنت دارد تا کتابخانه بارگذاری شود. یک‌بار با اینترنت وصل شو و دوباره امتحان کن.</div>';
+    document.getElementById('qrDownloadBtn').style.display = 'none';
+  }
+}
+function downloadQr(){
+  const canvas = document.querySelector('#qrCanvasBox canvas');
+  if(!canvas){ alert('ابتدا QR کد را بسازید.'); return; }
+  const link = document.createElement('a');
+  link.download = 'qrcode.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
 }
 
 /* --- Initialization --- */
