@@ -13,6 +13,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
 <style>
   :root[data-theme="dark"] {
     --bg:#0B1210;
@@ -552,6 +554,22 @@
               <div class="ticon" style="background:rgba(89,195,180,0.14); color:var(--teal);">🔳</div>
               <div class="tname">ساخت QR کد</div>
             </div>
+            <div class="tool-card" onclick="openTool('scan')">
+              <div class="ticon" style="background:rgba(111,177,217,0.14); color:var(--sky);">📷</div>
+              <div class="tname">اسکن QR</div>
+            </div>
+            <div class="tool-card" onclick="openTool('unit')">
+              <div class="ticon" style="background:rgba(217,178,76,0.14); color:var(--gold);">📐</div>
+              <div class="tname">مبدل واحدها</div>
+            </div>
+            <div class="tool-card" onclick="openTool('pass')">
+              <div class="ticon" style="background:rgba(156,141,224,0.14); color:var(--violet);">🔑</div>
+              <div class="tname">رمز عبور قوی</div>
+            </div>
+            <div class="tool-card" onclick="openTool('stego')">
+              <div class="ticon" style="background:rgba(211,104,76,0.14); color:var(--rust);">🖼️</div>
+              <div class="tname">مخفی‌سازی متن در عکس</div>
+            </div>
           </div>
         </div>
 
@@ -700,6 +718,7 @@
             <div class="qr-type" data-t="whatsapp" onclick="setQrType('whatsapp')"><div class="qi" style="color:#25D366;">🟢</div><div class="qn">واتساپ</div></div>
             <div class="qr-type" data-t="instagram" onclick="setQrType('instagram')"><div class="qi" style="color:#D3684C;">📷</div><div class="qn">اینستاگرام</div></div>
             <div class="qr-type" data-t="vcard" onclick="setQrType('vcard')"><div class="qi" style="color:#D3684C;">🪪</div><div class="qn">کارت ویزیت</div></div>
+            <div class="qr-type" data-t="telegram" onclick="setQrType('telegram')"><div class="qi" style="color:#3B9FE0;">✈️</div><div class="qn">تلگرام</div></div>
           </div>
 
           <div class="qr-fields on" id="qrf-url">
@@ -752,10 +771,121 @@
             <div class="field-label">سازمان / شغل (اختیاری)</div>
             <input class="field" id="qrVOrg">
           </div>
+          <div class="qr-fields" id="qrf-telegram">
+            <div class="field-label">آیدی تلگرام (بدون @) — در صورت داشتن، اولویت با اینه</div>
+            <input class="field" id="qrTgUser" placeholder="username">
+            <div class="field-label">یا شماره تلفن (اگر یوزرنیم نداری)</div>
+            <input class="field" id="qrTgPhone" placeholder="989xxxxxxxxx">
+            <div class="hint" style="margin-top:-6px;">لینک با شماره تلفن فقط وقتی کار می‌کند که آن شخص در تنظیمات حریم خصوصی تلگرامش پیدا شدن با شماره را باز گذاشته باشد. اگر یوزرنیم را وارد کنی، همیشه کار می‌کند.</div>
+          </div>
+
+          <div class="section-label">لوگوی وسط QR (اختیاری)</div>
+          <div class="qr-type-grid" style="grid-template-columns:repeat(5,1fr); margin-bottom:14px;">
+            <div class="qr-type on" data-l="none" onclick="setQrLogo('none')"><div class="qi">🚫</div><div class="qn">هیچ‌کدام</div></div>
+            <div class="qr-type" data-l="instagram" onclick="setQrLogo('instagram')"><div class="qi" style="color:#D3684C;">📷</div><div class="qn">اینستاگرام</div></div>
+            <div class="qr-type" data-l="whatsapp" onclick="setQrLogo('whatsapp')"><div class="qi" style="color:#25D366;">🟢</div><div class="qn">واتساپ</div></div>
+            <div class="qr-type" data-l="telegram" onclick="setQrLogo('telegram')"><div class="qi" style="color:#3B9FE0;">✈️</div><div class="qn">تلگرام</div></div>
+            <div class="qr-type" data-l="custom" onclick="setQrLogo('custom')"><div class="qi">🖼️</div><div class="qn">عکس دلخواه</div></div>
+          </div>
+          <input type="file" accept="image/*" id="qrLogoFile" style="display:none;" onchange="onQrLogoFile(event)">
+          <div class="hint" id="qrLogoHint" style="display:none; margin-top:-10px;">با انتخاب گزینه‌ی «عکس دلخواه»، یک عکس از گوشی انتخاب کن.</div>
 
           <button class="btn-primary" onclick="generateQr()">ساخت QR کد</button>
           <div id="qrCanvasBox" style="display:none;"></div>
           <button class="btn-secondary" id="qrDownloadBtn" style="display:none;" onclick="downloadQr()">⬇ دانلود تصویر QR</button>
+        </div>
+
+        <!-- QR Scanner Tool -->
+        <div class="toolpage" id="tool-scan">
+          <div class="tool-back" onclick="closeToolScan()">→ بازگشت</div>
+          <div class="hint" style="margin-top:0;">دوربین را روبه‌روی QR کد بگیر — به‌محض تشخیص، دکمه‌ی مناسب همون‌جا نشون داده می‌شه.</div>
+          <div style="position:relative; border-radius:16px; overflow:hidden; background:#000; margin-bottom:14px;">
+            <video id="scanVideo" style="width:100%; display:block;" playsinline muted></video>
+            <div id="scanBox" style="position:absolute; inset:12%; border:2px solid var(--teal); border-radius:14px; opacity:0.6; pointer-events:none;"></div>
+          </div>
+          <canvas id="scanCanvas" style="display:none;"></canvas>
+          <button class="btn-primary" id="scanStartBtn" onclick="startScan()">📷 شروع اسکن</button>
+          <button class="btn-secondary" id="scanStopBtn" style="display:none;" onclick="stopScan()">توقف اسکن</button>
+
+          <div class="result-box" id="scanResultBox">
+            <div class="field-label" style="text-align:right;">محتوای شناسایی‌شده:</div>
+            <div class="field" style="word-break:break-all; white-space:pre-wrap; margin-bottom:10px;" id="scanRawText">--</div>
+            <div id="scanActions" style="display:flex; flex-direction:column; gap:8px;"></div>
+          </div>
+        </div>
+
+        <!-- Unit Converter Tool -->
+        <div class="toolpage" id="tool-unit">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="chip-row" id="unitChips">
+            <div class="chip on" data-c="length" onclick="setUnitCat('length')">طول</div>
+            <div class="chip" data-c="weight" onclick="setUnitCat('weight')">وزن</div>
+            <div class="chip" data-c="volume" onclick="setUnitCat('volume')">حجم</div>
+            <div class="chip" data-c="temp" onclick="setUnitCat('temp')">دما</div>
+            <div class="chip" data-c="digital" onclick="setUnitCat('digital')">حافظه دیجیتال</div>
+          </div>
+          <div class="field-label">از واحد</div>
+          <select class="tool-select" id="unitFrom" onchange="computeUnit()"></select>
+          <input class="field" id="unitValue" type="number" value="1" oninput="computeUnit()">
+          <div style="text-align:center; margin:-6px 0 10px;">
+            <button class="btn-secondary" style="width:auto; padding:8px 20px; margin:0;" onclick="swapUnit()">⇅ جابجایی واحدها</button>
+          </div>
+          <div class="field-label">به واحد</div>
+          <select class="tool-select" id="unitTo" onchange="computeUnit()"></select>
+          <div class="result-box on" style="margin-top:6px;">
+            <div class="result-big" style="font-size:26px; font-weight:700;" id="unitResult">--</div>
+          </div>
+        </div>
+
+        <!-- Password Generator Tool -->
+        <div class="toolpage" id="tool-pass">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">طول رمز عبور: <b id="passLenLabel" style="color:var(--violet);">16</b></div>
+          <input class="field" id="passLen" type="range" min="6" max="64" value="16" oninput="document.getElementById('passLenLabel').textContent=this.value">
+          <div class="chip-row">
+            <div class="chip on" id="passUpper" onclick="this.classList.toggle('on')">حروف بزرگ ABC</div>
+            <div class="chip on" id="passLower" onclick="this.classList.toggle('on')">حروف کوچک abc</div>
+          </div>
+          <div class="chip-row">
+            <div class="chip on" id="passNum" onclick="this.classList.toggle('on')">اعداد 123</div>
+            <div class="chip on" id="passSym" onclick="this.classList.toggle('on')">نشانه‌ها !@#</div>
+          </div>
+          <button class="btn-primary" onclick="generatePassword()">🔑 تولید رمز عبور</button>
+          <div class="result-box" id="passResultBox">
+            <div class="field" id="passOutput" style="font-size:18px; text-align:center; word-break:break-all;">--</div>
+            <div class="result-tag" id="passStrength" style="margin-top:10px;">--</div>
+            <button class="btn-secondary" style="margin-top:10px;" onclick="copyPassword()">📋 کپی رمز</button>
+          </div>
+        </div>
+
+        <!-- Steganography Tool -->
+        <div class="toolpage" id="tool-stego">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="chip-row">
+            <div class="chip on" data-s="hide" onclick="setStegoMode('hide')">پنهان کردن متن</div>
+            <div class="chip" data-s="reveal" onclick="setStegoMode('reveal')">استخراج متن</div>
+          </div>
+          <div class="hint" style="margin-top:0;">⚠️ خروجی حتماً باید PNG بمونه. اگه از واتساپ/تلگرام به‌صورت عکس معمولی بفرستی، فشرده می‌شه و متن مخفی از بین می‌ره. به‌صورت «فایل» (Document) بفرست.</div>
+
+          <div id="stego-hide">
+            <div class="field-label">۱. یک عکس انتخاب کن</div>
+            <input type="file" accept="image/*" class="field" id="stegoHideImg" onchange="loadStegoImage(event)">
+            <div class="field-label">۲. متن مخفی</div>
+            <input class="field" id="stegoHideText" placeholder="متنی که می‌خوای مخفی بشه...">
+            <button class="btn-primary" onclick="hideStegoText()">🔒 مخفی‌سازی و ساخت عکس</button>
+            <canvas id="stegoCanvas" style="display:none;"></canvas>
+            <div id="stegoHidePreview" style="display:none; text-align:center; margin-bottom:12px;"></div>
+            <button class="btn-secondary" id="stegoDownloadBtn" style="display:none;" onclick="downloadStego()">⬇ دانلود عکس نهایی (PNG)</button>
+          </div>
+
+          <div id="stego-reveal" style="display:none;">
+            <div class="field-label">عکسی که متن داخلش مخفی شده را انتخاب کن</div>
+            <input type="file" accept="image/*" class="field" id="stegoRevealImg" onchange="revealStegoText(event)">
+            <div class="result-box" id="stegoRevealBox">
+              <div class="field-label" style="text-align:right;">متن استخراج‌شده:</div>
+              <div class="field" style="word-break:break-all; white-space:pre-wrap;" id="stegoRevealedText">--</div>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -976,7 +1106,7 @@ function saveAllSettings(){
 }
 
 /* --- Functional Tools --- */
-function openTool(name){ document.getElementById('toolsHome').style.display='none'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); document.getElementById('tool-'+name).classList.add('on'); if(name=='age') initShamsiSelectors(); if(name=='convdate') updateConvSelectors(); }
+function openTool(name){ document.getElementById('toolsHome').style.display='none'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); document.getElementById('tool-'+name).classList.add('on'); if(name=='age') initShamsiSelectors(); if(name=='convdate') updateConvSelectors(); if(name=='unit') initUnitSelectors(); }
 function closeTool(){ document.getElementById('toolsHome').style.display='block'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); }
 function numOf(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; }
 
@@ -1194,12 +1324,30 @@ function calcDiscount(){
 
 /* --- QR Code Tool --- */
 let qrType = 'url';
+let qrLogo = 'none';
+let qrCustomLogoImg = null;
 function setQrType(t){
   qrType = t;
-  document.querySelectorAll('.qr-type').forEach(el=> el.classList.toggle('on', el.dataset.t===t));
+  document.querySelectorAll('.qr-type[data-t]').forEach(el=> el.classList.toggle('on', el.dataset.t===t));
   document.querySelectorAll('.qr-fields').forEach(el=> el.classList.toggle('on', el.id === 'qrf-'+t));
   document.getElementById('qrCanvasBox').style.display='none';
   document.getElementById('qrDownloadBtn').style.display='none';
+}
+function setQrLogo(l){
+  qrLogo = l;
+  document.querySelectorAll('.qr-type[data-l]').forEach(el=> el.classList.toggle('on', el.dataset.l===l));
+  document.getElementById('qrLogoHint').style.display = l==='custom' ? 'block' : 'none';
+  if(l === 'custom'){ document.getElementById('qrLogoFile').click(); }
+}
+function onQrLogoFile(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    const img = new Image();
+    img.onload = ()=>{ qrCustomLogoImg = img; };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 function qval(id){ return document.getElementById(id).value.trim(); }
 function generateQr(){
@@ -1212,6 +1360,7 @@ function generateQr(){
     case 'tel': { let p=qval('qrTelPhone'); if(!p){alert('شماره را وارد کنید.');return;} content = `tel:${p}`; break; }
     case 'whatsapp': { let p=qval('qrWaPhone'), m=qval('qrWaMsg'); if(!p){alert('شماره واتساپ را وارد کنید.');return;} content = `https://wa.me/${p.replace(/\D/g,'')}` + (m? `?text=${encodeURIComponent(m)}`:''); break; }
     case 'instagram': { let u=qval('qrIgUser'); if(!u){alert('آیدی اینستاگرام را وارد کنید.');return;} content = `https://instagram.com/${u.replace('@','')}`; break; }
+    case 'telegram': { let u=qval('qrTgUser'), p=qval('qrTgPhone'); if(!u && !p){alert('آیدی یا شماره تلگرام را وارد کنید.');return;} content = u ? `https://t.me/${u.replace('@','')}` : `https://t.me/+${p.replace(/\D/g,'')}`; break; }
     case 'vcard': { let n=qval('qrVName'), p=qval('qrVPhone'), e=qval('qrVEmail'), o=qval('qrVOrg'); if(!n){alert('نام را وارد کنید.');return;}
       content = `BEGIN:VCARD\nVERSION:3.0\nFN:${n}\n${p?'TEL:'+p+'\n':''}${e?'EMAIL:'+e+'\n':''}${o?'ORG:'+o+'\n':''}END:VCARD`; break; }
   }
@@ -1220,12 +1369,44 @@ function generateQr(){
   box.style.display = 'flex';
   try{
     if(typeof QRCode === 'undefined') throw new Error('lib not loaded');
-    new QRCode(box, { text: content, width:220, height:220, colorDark:"#12201C", colorLight:"#ffffff", correctLevel: QRCode.CorrectLevel.H });
+    new QRCode(box, { text: content, width:240, height:240, colorDark:"#12201C", colorLight:"#ffffff", correctLevel: QRCode.CorrectLevel.H });
     document.getElementById('qrDownloadBtn').style.display = 'block';
+    setTimeout(()=> drawQrLogoOverlay(box), 60);
   }catch(e){
     box.innerHTML = '<div style="color:#B33; padding:20px; font-size:12px; text-align:center;">ساخت QR نیاز به بار اول اتصال اینترنت دارد تا کتابخانه بارگذاری شود. یک‌بار با اینترنت وصل شو و دوباره امتحان کن.</div>';
     document.getElementById('qrDownloadBtn').style.display = 'none';
   }
+}
+function drawQrLogoOverlay(box){
+  if(qrLogo === 'none') return;
+  const canvas = box.querySelector('canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const size = canvas.width;
+  const logoSize = size * 0.22;
+  const cx = size/2, cy = size/2;
+  // white rounded backdrop so the logo doesn't blend into QR modules
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(cx-logoSize/2-4, cy-logoSize/2-4, logoSize+8, logoSize+8, 10) : ctx.rect(cx-logoSize/2-4, cy-logoSize/2-4, logoSize+8, logoSize+8);
+  ctx.fill();
+
+  if(qrLogo === 'custom' && qrCustomLogoImg){
+    ctx.drawImage(qrCustomLogoImg, cx-logoSize/2, cy-logoSize/2, logoSize, logoSize);
+    return;
+  }
+  const presets = {
+    instagram: {bg:'#D3684C', emoji:'📷'},
+    whatsapp: {bg:'#25D366', emoji:'💬'},
+    telegram: {bg:'#3B9FE0', emoji:'✈️'}
+  };
+  const p = presets[qrLogo];
+  if(!p) return;
+  ctx.fillStyle = p.bg;
+  ctx.beginPath(); ctx.arc(cx, cy, logoSize/2, 0, Math.PI*2); ctx.fill();
+  ctx.font = (logoSize*0.55)+'px sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(p.emoji, cx, cy+1);
 }
 function downloadQr(){
   const canvas = document.querySelector('#qrCanvasBox canvas');
@@ -1234,6 +1415,275 @@ function downloadQr(){
   link.download = 'qrcode.png';
   link.href = canvas.toDataURL('image/png');
   link.click();
+}
+
+/* --- QR Scanner Tool --- */
+let scanStream = null;
+let scanRAF = null;
+function closeToolScan(){ stopScan(); closeTool(); }
+async function startScan(){
+  const video = document.getElementById('scanVideo');
+  try{
+    scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+  }catch(e){
+    alert('دسترسی به دوربین داده نشد. از تنظیمات گوشی اجازه دوربین را برای این برنامه فعال کن.');
+    return;
+  }
+  video.srcObject = scanStream;
+  await video.play();
+  document.getElementById('scanStartBtn').style.display = 'none';
+  document.getElementById('scanStopBtn').style.display = 'block';
+  document.getElementById('scanResultBox').classList.remove('on');
+  scanLoop();
+}
+function stopScan(){
+  if(scanRAF) cancelAnimationFrame(scanRAF);
+  scanRAF = null;
+  if(scanStream){ scanStream.getTracks().forEach(t=>t.stop()); scanStream = null; }
+  document.getElementById('scanStartBtn').style.display = 'block';
+  document.getElementById('scanStopBtn').style.display = 'none';
+}
+function scanLoop(){
+  const video = document.getElementById('scanVideo');
+  const canvas = document.getElementById('scanCanvas');
+  if(video.readyState === video.HAVE_ENOUGH_DATA && typeof jsQR !== 'undefined'){
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imgData.data, canvas.width, canvas.height);
+    if(code && code.data){
+      stopScan();
+      handleScanResult(code.data);
+      return;
+    }
+  }
+  scanRAF = requestAnimationFrame(scanLoop);
+}
+function handleScanResult(text){
+  document.getElementById('scanRawText').textContent = text;
+  const actions = document.getElementById('scanActions');
+  actions.innerHTML = "";
+  const addBtn = (label, onClick)=>{
+    const b = document.createElement('button');
+    b.className = 'btn-primary'; b.style.marginBottom = '0'; b.textContent = label;
+    b.onclick = onClick;
+    actions.appendChild(b);
+  };
+  const addLink = (label, href)=>{
+    const a = document.createElement('a');
+    a.className = 'btn-primary'; a.style.marginBottom='0'; a.style.display='block'; a.style.textDecoration='none'; a.style.textAlign='center';
+    a.textContent = label; a.href = href; a.target = '_blank'; a.rel = 'noopener';
+    actions.appendChild(a);
+  };
+
+  if(/^https?:\/\//i.test(text)){
+    if(/wa\.me|api\.whatsapp\.com/i.test(text)) addLink('🟢 باز کردن در واتساپ', text);
+    else if(/t\.me\//i.test(text)) addLink('✈️ باز کردن در تلگرام', text);
+    else if(/instagram\.com/i.test(text)) addLink('📷 باز کردن اینستاگرام', text);
+    else addLink('🌐 باز کردن سایت', text);
+  } else if(/^tel:/i.test(text)){
+    const num = text.replace(/^tel:/i,'');
+    addLink('📞 تماس بگیر', text);
+    addLink('💬 ارسال پیامک', 'sms:'+num);
+  } else if(/^SMSTO:/i.test(text)){
+    const parts = text.split(':'); const num = parts[1]; const msg = parts.slice(2).join(':');
+    addLink('💬 ارسال پیامک به ' + num, `sms:${num}${msg? '?body='+encodeURIComponent(msg):''}`);
+  } else if(/^WIFI:/i.test(text)){
+    const ssidM = text.match(/S:([^;]*);/); const passM = text.match(/P:([^;]*);/);
+    const ssid = ssidM ? ssidM[1] : '—'; const pass = passM ? passM[1] : '';
+    document.getElementById('scanRawText').textContent = `شبکه: ${ssid}\nرمز: ${pass || '(بدون رمز)'}`;
+    addBtn('📋 کپی رمز وای‌فای', ()=>{ navigator.clipboard?.writeText(pass).then(()=> alert('رمز کپی شد. حالا از تنظیمات وای‌فای گوشی، شبکه را انتخاب و رمز را وارد کن (اتصال خودکار از طریق مرورگر ممکن نیست).')); });
+  } else if(/^BEGIN:VCARD/i.test(text)){
+    addBtn('👤 افزودن به مخاطبین', ()=>{
+      const blob = new Blob([text], {type:'text/vcard'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'contact.vcf'; a.click();
+      URL.revokeObjectURL(url);
+    });
+  } else {
+    addBtn('📋 کپی متن', ()=>{ navigator.clipboard?.writeText(text).then(()=> alert('متن کپی شد.')); });
+  }
+  document.getElementById('scanResultBox').classList.add('on');
+}
+
+/* --- Unit Converter --- */
+const UNIT_DATA = {
+  length: { units:{mm:0.001,cm:0.01,m:1,km:1000,in:0.0254,ft:0.3048,yd:0.9144,mi:1609.344}, names:{mm:'میلی‌متر',cm:'سانتی‌متر',m:'متر',km:'کیلومتر',in:'اینچ',ft:'فوت',yd:'یارد',mi:'مایل'} },
+  weight: { units:{mg:1e-6,g:0.001,kg:1,ton:1000,lb:0.45359237,oz:0.028349523}, names:{mg:'میلی‌گرم',g:'گرم',kg:'کیلوگرم',ton:'تن',lb:'پوند',oz:'اونس'} },
+  volume: { units:{ml:0.001,l:1,m3:1000,galUS:3.785411784,cupUS:0.2365882365}, names:{ml:'میلی‌لیتر',l:'لیتر',m3:'مترمکعب',galUS:'گالن آمریکایی',cupUS:'فنجان آمریکایی'} },
+  digital: { units:{bit:0.125,B:1,KB:1024,MB:1048576,GB:1073741824,TB:1099511627776}, names:{bit:'بیت',B:'بایت',KB:'کیلوبایت',MB:'مگابایت',GB:'گیگابایت',TB:'ترابایت'} },
+  temp: { special:true, units:{C:1,F:1,K:1}, names:{C:'سلسیوس',F:'فارنهایت',K:'کلوین'} }
+};
+let unitCat = 'length';
+function setUnitCat(c){
+  unitCat = c;
+  document.querySelectorAll('#unitChips .chip').forEach(el=> el.classList.toggle('on', el.dataset.c===c));
+  populateUnitSelects();
+  computeUnit();
+}
+function populateUnitSelects(){
+  const data = UNIT_DATA[unitCat];
+  const keys = Object.keys(data.units);
+  const fromSel = document.getElementById('unitFrom'), toSel = document.getElementById('unitTo');
+  fromSel.innerHTML = ""; toSel.innerHTML = "";
+  keys.forEach((k,i)=>{
+    fromSel.appendChild(new Option(data.names[k], k, i===0, i===0));
+    toSel.appendChild(new Option(data.names[k], k, i===1, i===1));
+  });
+}
+function initUnitSelectors(){ populateUnitSelects(); computeUnit(); }
+function tempConvert(v, from, to){
+  let c;
+  if(from==='C') c=v; else if(from==='F') c=(v-32)*5/9; else c=v-273.15;
+  if(to==='C') return c; if(to==='F') return c*9/5+32; return c+273.15;
+}
+function computeUnit(){
+  const v = parseFloat(document.getElementById('unitValue').value);
+  const from = document.getElementById('unitFrom').value, to = document.getElementById('unitTo').value;
+  const out = document.getElementById('unitResult');
+  if(isNaN(v)){ out.textContent = '--'; return; }
+  let result;
+  if(UNIT_DATA[unitCat].special){ result = tempConvert(v, from, to); }
+  else { const data = UNIT_DATA[unitCat].units; result = v * data[from] / data[to]; }
+  out.textContent = fmt(Math.round(result*1e6)/1e6) + ' ' + UNIT_DATA[unitCat].names[to];
+}
+function swapUnit(){
+  const fromSel = document.getElementById('unitFrom'), toSel = document.getElementById('unitTo');
+  const tmp = fromSel.value; fromSel.value = toSel.value; toSel.value = tmp;
+  computeUnit();
+}
+
+/* --- Password Generator --- */
+function generatePassword(){
+  const len = parseInt(document.getElementById('passLen').value);
+  const useUpper = document.getElementById('passUpper').classList.contains('on');
+  const useLower = document.getElementById('passLower').classList.contains('on');
+  const useNum = document.getElementById('passNum').classList.contains('on');
+  const useSym = document.getElementById('passSym').classList.contains('on');
+  const sets = [];
+  if(useUpper) sets.push('ABCDEFGHJKLMNPQRSTUVWXYZ');
+  if(useLower) sets.push('abcdefghijkmnpqrstuvwxyz');
+  if(useNum) sets.push('23456789');
+  if(useSym) sets.push('!@#$%^&*()-_=+?');
+  if(sets.length===0){ alert('حداقل یک نوع کاراکتر را انتخاب کن.'); return; }
+  const all = sets.join('');
+  const arr = new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  let pass = '';
+  // guarantee at least one char from each selected set
+  sets.forEach((s,i)=>{ pass += s[arr[i] % s.length]; });
+  for(let i=sets.length; i<len; i++){ pass += all[arr[i] % all.length]; }
+  // shuffle
+  pass = pass.split('').sort(()=> 0.5 - Math.random()).join('').slice(0, len);
+  document.getElementById('passOutput').textContent = pass;
+  let score = 0;
+  if(len>=12) score++; if(len>=16) score++;
+  if(sets.length>=3) score++; if(sets.length===4) score++;
+  const tag = document.getElementById('passStrength');
+  const levels = [
+    {t:'ضعیف', c:'var(--danger)'}, {t:'متوسط', c:'var(--gold)'}, {t:'خوب', c:'var(--sky)'}, {t:'قوی', c:'var(--teal)'}, {t:'خیلی قوی', c:'var(--teal)'}
+  ];
+  const lv = levels[Math.min(score, 4)];
+  tag.textContent = lv.t; tag.style.background = lv.c; tag.style.color = '#12201C';
+  document.getElementById('passResultBox').classList.add('on');
+}
+function copyPassword(){
+  const p = document.getElementById('passOutput').textContent;
+  if(!p || p==='--') return;
+  navigator.clipboard?.writeText(p).then(()=> alert('رمز کپی شد.'));
+}
+
+/* --- Steganography (LSB) --- */
+function setStegoMode(m){
+  document.querySelectorAll('#tool-stego .chip').forEach(el=> el.classList.toggle('on', el.dataset.s===m));
+  document.getElementById('stego-hide').style.display = m==='hide' ? 'block' : 'none';
+  document.getElementById('stego-reveal').style.display = m==='reveal' ? 'block' : 'none';
+}
+let stegoImg = null;
+function loadStegoImage(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{ const img = new Image(); img.onload = ()=>{ stegoImg = img; }; img.src = ev.target.result; };
+  reader.readAsDataURL(file);
+}
+function strToBits(str){
+  const bytes = new TextEncoder().encode(str);
+  let bits = [];
+  // 32-bit length header
+  for(let i=31;i>=0;i--) bits.push((bytes.length >> i) & 1);
+  bytes.forEach(b=>{ for(let i=7;i>=0;i--) bits.push((b >> i) & 1); });
+  return bits;
+}
+function hideStegoText(){
+  if(!stegoImg){ alert('اول یک عکس انتخاب کن.'); return; }
+  const text = document.getElementById('stegoHideText').value;
+  if(!text){ alert('متن مخفی را وارد کن.'); return; }
+  const canvas = document.getElementById('stegoCanvas');
+  canvas.width = stegoImg.width; canvas.height = stegoImg.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(stegoImg, 0, 0);
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const bits = strToBits(text);
+  const capacity = imgData.data.length / 4 * 3; // 3 channels per pixel (skip alpha)
+  if(bits.length > capacity){ alert('این متن برای این عکس خیلی طولانیه؛ عکس بزرگتری انتخاب کن یا متن را کوتاه‌تر کن.'); return; }
+  let bitIdx = 0;
+  for(let i=0; i<imgData.data.length && bitIdx<bits.length; i+=4){
+    for(let ch=0; ch<3 && bitIdx<bits.length; ch++){
+      imgData.data[i+ch] = (imgData.data[i+ch] & 0xFE) | bits[bitIdx];
+      bitIdx++;
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+  const preview = document.getElementById('stegoHidePreview');
+  preview.innerHTML = '';
+  const img = document.createElement('img');
+  img.src = canvas.toDataURL('image/png');
+  img.style.maxWidth = '100%'; img.style.borderRadius = '12px';
+  preview.appendChild(img);
+  preview.style.display = 'block';
+  document.getElementById('stegoDownloadBtn').style.display = 'block';
+}
+function downloadStego(){
+  const canvas = document.getElementById('stegoCanvas');
+  const link = document.createElement('a');
+  link.download = 'hidden-message.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+function revealStegoText(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width; canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      let bits = [];
+      for(let i=0; i<imgData.data.length; i+=4){
+        for(let ch=0; ch<3; ch++) bits.push(imgData.data[i+ch] & 1);
+      }
+      let len = 0;
+      for(let i=0;i<32;i++) len = (len<<1) | bits[i];
+      if(len <= 0 || len > (bits.length-32)/8){
+        document.getElementById('stegoRevealedText').textContent = 'متنی پیدا نشد (این عکس شاید حاوی پیام مخفی نیست یا فشرده شده).';
+      } else {
+        const byteArr = new Uint8Array(len);
+        for(let i=0;i<len;i++){
+          let byte = 0;
+          for(let b=0;b<8;b++){ byte = (byte<<1) | bits[32 + i*8 + b]; }
+          byteArr[i] = byte;
+        }
+        document.getElementById('stegoRevealedText').textContent = new TextDecoder().decode(byteArr);
+      }
+      document.getElementById('stegoRevealBox').classList.add('on');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 /* --- Initialization --- */
