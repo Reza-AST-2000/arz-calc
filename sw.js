@@ -1,10 +1,14 @@
-const CACHE_NAME = "calc-arz-v1";
+const CACHE_NAME = "calc-arz-v2";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png"
+];
+// Static third-party libraries worth caching for offline use (unlike live price APIs)
+const CACHEABLE_CROSS_ORIGIN = [
+  "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
 ];
 
 self.addEventListener("install", (event) => {
@@ -24,11 +28,11 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // network-first for API calls (live rates), cache-first for the app shell
   const url = new URL(event.request.url);
   const isSameOrigin = url.origin === self.location.origin;
+  const isCacheableLib = CACHEABLE_CROSS_ORIGIN.includes(event.request.url);
 
-  if (!isSameOrigin) return; // let external API calls pass straight through
+  if (!isSameOrigin && !isCacheableLib) return; // let live price API calls pass straight through, uncached
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
