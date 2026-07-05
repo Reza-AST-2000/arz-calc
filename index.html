@@ -1071,6 +1071,9 @@
           <div class="chip-row">
             <div class="chip" id="passNoAmbig" onclick="this.classList.toggle('on')">حذف کاراکترهای مشابه (O/0 ، l/1/I)</div>
           </div>
+          <div class="chip-row">
+            <div class="chip" id="passObscure" onclick="this.classList.toggle('on')">شامل کاراکترهای مبهم { } [ ] ( ) / \ ' " ~ , ; . :</div>
+          </div>
           <button class="btn-primary" onclick="generatePassword()">🔑 تولید رمز عبور</button>
           <div class="result-box" id="passResultBox">
             <div class="field" id="passOutput" style="font-size:18px; text-align:center; word-break:break-all;">--</div>
@@ -1820,6 +1823,4 @@ function handleScanResult(text){
     b.onclick = onClick;
     actions.appendChild(b);
   };
-  const addLink = (label, href)=>{
-    const a = document.createElement('a');
-    a.className = 'btn-primary'; a.style.marginBottom='0'; a.style.display='block'; a.style.textDecoration='none'; a.style.te
+  const add
