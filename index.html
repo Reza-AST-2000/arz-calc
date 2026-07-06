@@ -443,7 +443,7 @@
     <div class="header-actions">
       <div class="circle-btn" id="historyBtn" onclick="openHistory()">🕐</div>
       <div class="circle-btn" id="themeBtn" onclick="toggleTheme()">🌓</div>
-      <div class="circle-btn" id="settingsBtn" onclick="openSettings()" style="display:none;">⚙️</div>
+      <div class="circle-btn" id="settingsBtn" onclick="openSettings()">⚙️</div>
     </div>
   </header>
 
@@ -1293,8 +1293,13 @@ function switchView(name){
   document.getElementById('nav-calc').classList.toggle('active', name==='calc');
   document.getElementById('nav-rates').classList.toggle('active', name==='rates');
   document.getElementById('nav-tools').classList.toggle('active', name==='tools');
-  document.getElementById('historyBtn').style.display = (name==='calc') ? 'flex' : 'none';
-  document.getElementById('settingsBtn').style.display = (name==='rates') ? 'flex' : 'none';
+
+  // نمایش/مخفی‌سازی دکمه‌های هدر بر اساس تب فعال:
+  // - ماشین‌حساب: بدون دکمه تنظیمات
+  // - نرخ‌ها: بدون دکمه تاریخچه (ساعت)
+  // - ابزارها: بدون تنظیمات و بدون تاریخچه (ساعت)
+  document.getElementById('settingsBtn').style.display = (name==='calc' || name==='tools') ? 'none' : 'flex';
+  document.getElementById('historyBtn').style.display = (name==='rates' || name==='tools') ? 'none' : 'flex';
 }
 function showRateList(which){
   ['market','global','gold','crypto'].forEach(k=>{
@@ -1816,8 +1821,4 @@ function scanLoop(){
 }
 function handleScanResult(text){
   document.getElementById('scanRawText').textContent = text;
-  const actions = document.getElementById('scanActions');
-  actions.innerHTML = "";
-  const addBtn = (label, onClick)=>{
-    const b = document.createElement('button');
-    b.className = 'btn-primar
+  co
