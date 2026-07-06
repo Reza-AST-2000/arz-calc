@@ -1,0 +1,2308 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0B1210">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>محاسبه‌گر ارز, طلا و کریپتو</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
+<style>
+  :root[data-theme="dark"] {
+    --bg:#0B1210;
+    --bg2:#0E1614;
+    --surface:#141F1C;
+    --surface2:#1B2925;
+    --line: rgba(242,169,61,0.09);
+    --amber:#F2A93B;
+    --teal:#59C3B4;
+    --rust:#D3684C;
+    --gold:#D9B24C;
+    --violet:#9C8DE0;
+    --sky:#6FB1D9;
+    --text:#EFEBE1;
+    --muted:#889592;
+    --danger:#E2664B;
+    --screen-bg: linear-gradient(160deg, #101B18 0%, #0A1412 100%);
+    --screen-text: var(--amber);
+  }
+  :root[data-theme="light"] {
+    --bg:#F4F7F6;
+    --bg2:#EAF0EE;
+    --surface:#FFFFFF;
+    --surface2:#E4ECE9;
+    --line: rgba(20,32,27,0.08);
+    --amber:#D98200;
+    --teal:#2D8A7E;
+    --rust:#B54B32;
+    --gold:#A68122;
+    --violet:#6655B3;
+    --sky:#337FA6;
+    --text:#14201B;
+    --muted:#62726E;
+    --danger:#C4452B;
+    --screen-bg: linear-gradient(160deg, #1E332D 0%, #11221E 100%);
+    --screen-text: #F2A93B;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{height:100%; margin:0; overflow:hidden;}
+  body{
+    background: var(--bg);
+    color:var(--text);
+    font-family:'Vazirmatn', sans-serif;
+    display:flex; justify-content:center;
+    transition: background 0.3s, color 0.3s;
+  }
+  #app{
+    width:100%; max-width:460px; height:100vh; height:calc(var(--app-height, 100vh));
+    display:flex; flex-direction:column;
+    position:relative;
+    box-shadow: 0 0 70px rgba(0,0,0,0.25);
+    background: var(--bg);
+  }
+
+  /* ---- Header ---- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 18px 8px;
+    flex-shrink: 0;
+  }
+  .brand{ display:flex; align-items:center; gap:9px; }
+  .brand .mark{
+    width:30px; height:30px; border-radius:9px;
+    background:linear-gradient(135deg, #F2A93B, #D9B24C);
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px; box-shadow:0 4px 14px rgba(217,178,76,0.25);
+  }
+  header h1{ font-size:14.5px; font-weight:700; margin:0; letter-spacing:.2px; color:var(--muted); }
+  header h1 b{ color:var(--text); font-weight:800; display:block; font-size:15.5px; margin-top:1px;}
+  .header-actions { display:flex; gap:8px; }
+  .circle-btn{
+    width:34px; height:34px; border-radius:50%;
+    background:var(--surface2); border:1px solid var(--line);
+    color:var(--text); display:flex; align-items:center; justify-content:center;
+    font-size:16px; cursor:pointer; user-select:none;
+  }
+
+  /* ---- Main Content Container ---- */
+  .main-content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* ---- LCD display ---- */
+  #screen{
+    margin:0 16px 12px;
+    border-radius:20px;
+    padding:20px 18px 16px;
+    background:
+      repeating-linear-gradient(180deg, rgba(0,0,0,0.14) 0px, rgba(0,0,0,0.14) 1px, transparent 1px, transparent 3px),
+      var(--screen-bg);
+    border:1px solid rgba(242,169,59,0.14);
+    box-shadow: inset 0 0 34px rgba(0,0,0,0.6), 0 10px 26px rgba(0,0,0,0.2);
+    position:relative; overflow:hidden;
+    flex-shrink: 0;
+  }
+  #screen::before{
+    content:"";
+    position:absolute; top:-40%; left:-10%; width:70%; height:180%;
+    background: linear-gradient(120deg, rgba(242,169,59,0.06), transparent 55%);
+    pointer-events:none;
+  }
+  #expr{
+    direction:ltr; text-align:left;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14.5px; color:#889592;
+    min-height:18px; letter-spacing:.5px;
+    white-space:nowrap; overflow-x:auto; position:relative;
+  }
+  :root[data-theme="light"] #expr { color: #A4B3AF; }
+  #result{
+    direction:ltr; text-align:left;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:38px; font-weight:600; color:var(--screen-text);
+    text-shadow: 0 0 20px rgba(242,169,59,0.32);
+    margin-top:6px; white-space:nowrap; overflow-x:auto; position:relative;
+  }
+  #memChip{
+    display:inline-block; margin-top:8px; font-size:10.5px; color:#59C3B4;
+    border:1px solid rgba(89,195,180,0.35); padding:2px 9px; border-radius:20px;
+    font-family:'IBM Plex Mono', monospace; visibility:hidden; position:relative;
+  }
+
+  /* ---- Tabs (اصلاح مشکل بریده شدن تصویر 1000116247.png) ---- */
+  nav{
+    flex-shrink: 0;
+    display:flex; border-top:1px solid var(--line);
+    background:var(--surface);
+    z-index: 10;
+    padding-bottom: clamp(10px, env(safe-area-inset-bottom), 30px);
+  }
+  nav button{
+    flex:1; padding:12px 0 8px;
+    background:none; border:none; color:var(--muted);
+    font-family:'Vazirmatn'; font-size:12px; font-weight:600;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    cursor:pointer; position:relative;
+  }
+  nav button .ic{ font-size:18px; }
+  nav button.active{ color:var(--amber); }
+  nav button.active::before{
+    content:""; position:absolute; top:0; left:30%; right:30%; height:2px;
+    background:var(--amber); border-radius:2px;
+  }
+
+  .view { display:none; flex-direction:column; width:100%; }
+  .view.active { display:flex; }
+
+  /* ---- Keypad ---- */
+  #keypad{ padding:0 14px 14px; display:flex; flex-direction:column; gap:8px; }
+  .row{ display:flex; gap:8px; }
+  .key{
+    flex:1; aspect-ratio:1.45/1;
+    border-radius:14px; border:1px solid var(--line);
+    background:var(--surface2); color:var(--text);
+    font-family:'IBM Plex Mono', monospace; font-size:19px; font-weight:500;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; user-select:none;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.04);
+    transition: transform .06s ease, background .15s;
+  }
+  .key:active{ transform:translateY(1px) scale(0.96); background:var(--surface); box-shadow:none; }
+  .key.op{ background:rgba(242,169,59,0.10); color:var(--amber); border-color:rgba(242,169,59,0.25); }
+  .key.eq{ background:linear-gradient(135deg, #F2A93B, #D9B24C); color:#14201B; font-weight:700; border-color:transparent; box-shadow:0 3px 14px rgba(217,178,76,0.35), inset 0 1px 0 rgba(255,255,255,0.25); }
+  .key.fn{ background:rgba(89,195,180,0.08); color:var(--teal); font-size:13.5px; border-color:rgba(89,195,180,0.2); }
+  .key.danger{ color:var(--danger); }
+
+  #sciToggle{
+    margin:0 14px 10px; text-align:center;
+    font-size:12px; color:var(--amber); padding:10px; border-radius:12px;
+    border:1px solid rgba(242,169,59,0.2); background: rgba(242,169,59,0.04); cursor:pointer;
+    font-weight: 600;
+  }
+  #sciRows{ display:none; flex-direction:column; gap:8px; margin-bottom:8px; }
+  #sciRows.open{ display:flex; }
+
+  /* ---- Rates view ---- */
+  #ratesArea{ padding:2px 16px 16px; }
+  .subtabs{ display:flex; gap:7px; margin:6px 0 14px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+  .subtabs::-webkit-scrollbar{ display:none; }
+  .subtab{
+    flex:0 0 auto; display:flex; align-items:center; gap:6px;
+    padding:9px 14px; border-radius:20px; white-space:nowrap;
+    font-size:12px; font-weight:700; cursor:pointer;
+    border:1px solid var(--line); color:var(--muted); background:var(--surface);
+  }
+  .subtab .dot{ width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.5; }
+  .subtab.on{ color: white; }
+  :root[data-theme="light"] .subtab.on { color: #FFFFFF; }
+  .subtab.on[data-c="market"]{ background:var(--rust); border-color:var(--rust); }
+  .subtab.on[data-c="global"]{ background:var(--teal); border-color:var(--teal); }
+  .subtab.on[data-c="gold"]{ background:var(--gold); border-color:var(--gold); }
+  .subtab.on[data-c="crypto"]{ background:var(--violet); border-color:var(--violet); }
+
+  .ratelist{ display:none; flex-direction:column; gap:9px; }
+  .ratelist.on{ display:flex; }
+
+  .rate-card{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:12px 14px; cursor:pointer; border-right:3px solid transparent;
+  }
+  .rate-card:active{ background:var(--surface2); }
+  .rate-card.market{ border-right-color: var(--rust); }
+  .rate-card.global{ border-right-color: var(--teal); }
+  .rate-card.gold{ border-right-color: var(--gold); }
+  .rate-card.crypto{ border-right-color: var(--violet); }
+  .rate-left{ display:flex; align-items:center; gap:10px; }
+  .flag{ font-size:19px; width:26px; text-align:center; }
+  .rname{ font-size:13.5px; font-weight:600; }
+  .rcode{ font-size:10.5px; color:var(--muted); font-family:'IBM Plex Mono',monospace; }
+  .rval-wrap{ text-align:left; }
+  .rval{ font-family:'IBM Plex Mono', monospace; font-size:15px; font-weight:600; direction:ltr; }
+  .rsub{ font-size:10px; color:var(--muted); direction:ltr; margin-top:1px;}
+  .market .rval{ color:var(--rust); }
+  .global .rval{ color:var(--teal); }
+  .gold .rval{ color:var(--gold); }
+  .crypto .rval{ color:var(--violet); }
+  .runit{ font-size:10px; color:var(--muted); margin-right:3px; }
+
+  .hint{ font-size:11.5px; color:var(--muted); line-height:1.9; margin:4px 2px 14px; }
+  .statusrow{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .refresh{
+    font-size:11.5px; border:1px solid var(--line); color:var(--text);
+    padding:6px 12px; border-radius:20px; cursor:pointer; background:var(--surface2);
+  }
+  .updated{ font-size:10.5px; color:var(--muted); }
+  .section-label{ font-size:11px; color:var(--muted); margin:14px 2px 8px; display:flex; align-items:center; gap:6px;}
+  .section-label::after{ content:""; flex:1; height:1px; background:var(--line); }
+
+  /* ---- Tools view ---- */
+  #toolsArea{ padding:8px 16px 16px; }
+  .tool-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .tool-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:16px 14px; cursor:pointer; text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .tool-card:active{ background:var(--surface2); }
+  .tool-card .ticon{
+    width:44px; height:44px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center; font-size:21px;
+  }
+  .tool-card .tname{ font-size:12.5px; font-weight:700; }
+  .tool-card .tdesc{ font-size:10px; color:var(--muted); line-height:1.6; }
+
+  .tool-section-title{ font-size:12.5px; font-weight:700; color:var(--muted); margin:18px 4px 8px; }
+  .tool-section-title:first-child{ margin-top:2px; }
+  .tool-cat-header{ display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; padding:4px 2px; }
+  .tool-cat-header .tool-section-title{ margin:0; flex:1; }
+  .tool-cat-header:active{ opacity:.7; }
+  .tool-cat-arrow{ color:var(--muted); font-size:13px; transition:transform .25s ease; flex-shrink:0; margin-inline-start:8px; }
+  .tool-cat-arrow.collapsed{ transform:rotate(-90deg); }
+  .tool-list{ display:flex; flex-direction:column; gap:8px; overflow:hidden; max-height:2000px; transition:max-height .3s ease, opacity .25s ease, margin .3s ease; opacity:1; }
+  .tool-list.collapsed{ max-height:0; opacity:0; margin:0; gap:0; }
+  .tool-row{
+    display:flex; align-items:center; gap:12px;
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:12px 14px; cursor:pointer;
+  }
+  .tool-row:active{ background:var(--surface2); }
+  .tool-row .ticon{
+    flex-shrink:0; width:42px; height:42px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center; font-size:19px;
+  }
+  .tool-row .trow-mid{ flex:1; min-width:0; }
+  .tool-row .tname{ font-size:13.5px; font-weight:700; }
+  .tool-row .tdesc{ font-size:11px; color:var(--muted); margin-top:2px; line-height:1.5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tool-row .tarrow{ flex-shrink:0; color:var(--muted); font-size:20px; opacity:.6; }
+  .tool-star{ flex-shrink:0; font-size:17px; padding:4px; color:var(--muted); cursor:pointer; }
+  .tool-star.on{ color:var(--gold); }
+
+  .pinned-row{ display:flex; gap:14px; overflow-x:auto; padding:4px 2px 16px; scrollbar-width:none; }
+  .pinned-row::-webkit-scrollbar{ display:none; }
+  .pinned-item{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; width:58px; }
+  .pinned-item .ticon{ width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:21px; }
+  .pinned-item .pname{ font-size:9.5px; color:var(--muted); text-align:center; line-height:1.3; }
+
+  .toolpage{ display:none; flex-direction:column; }
+  .toolpage.on{ display:flex; }
+  .tool-back{
+    display:flex; align-items:center; gap:6px; color:var(--muted);
+    font-size:12.5px; font-weight:600; margin-bottom:14px; cursor:pointer; width:fit-content;
+  }
+  .field-label{ font-size:12px; color:var(--muted); margin:0 2px 6px; font-weight:600;}
+  .field{
+    width:100%; background:var(--surface2); color:var(--text);
+    border:1px solid var(--line); border-radius:12px; padding:12px 14px;
+    font-family:'IBM Plex Mono', monospace; font-size:15px; margin-bottom:14px;
+    direction:ltr; text-align:left;
+  }
+  .field::placeholder{ color:var(--muted); opacity:.6; }
+
+  /* ---- Custom range slider ---- */
+  input.range-input{
+    -webkit-appearance:none; appearance:none;
+    height:8px; padding:0; border:none; border-radius:6px;
+    background: linear-gradient(to right, var(--violet) 0%, var(--violet) 8%, var(--surface2) 8%, var(--surface2) 100%);
+    outline:none; cursor:pointer;
+  }
+  input.range-input::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none;
+    width:22px; height:22px; border-radius:50%;
+    background:var(--violet); border:3px solid var(--text);
+    box-shadow:0 2px 6px rgba(0,0,0,0.4); cursor:pointer;
+  }
+  input.range-input::-moz-range-thumb{
+    width:22px; height:22px; border-radius:50%;
+    background:var(--violet); border:3px solid var(--text);
+    box-shadow:0 2px 6px rgba(0,0,0,0.4); cursor:pointer;
+  }
+  input.range-input::-moz-range-track{ height:8px; border-radius:6px; background:var(--surface2); }
+  .field-row{ display:flex; gap:10px; }
+  .field-row > div { flex:1; }
+  .btn-primary{
+    width:100%; padding:13px 0; border-radius:12px; border:none; cursor:pointer;
+    font-weight:700; font-size:14px; margin-bottom:16px;
+    background:linear-gradient(135deg, #F2A93B, #D9B24C); color:#14201B;
+  }
+  
+  /* ---- Result Box Base ---- */
+  .result-box{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:18px; text-align:center; display:none;
+  }
+  .result-box.on{ display:block; }
+  
+  /* ---- BMI Result Specifics ---- */
+  .result-big-bmi {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .result-tag{
+    display:inline-block; padding:5px 16px; border-radius:20px;
+    font-size:13px; font-weight:700; margin-bottom:10px;
+  }
+  .result-advice-text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.8;
+    margin: 12px 0 6px;
+    background: rgba(255,255,255,0.02);
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px dashed var(--line);
+  }
+
+  /* ---- Gauge element ---- */
+  .gauge{ height:10px; border-radius:6px; margin:16px 2px 6px; position:relative;
+    background:linear-gradient(90deg, var(--sky) 0%, var(--teal) 28%, var(--gold) 60%, var(--danger) 100%);
+  }
+  .gauge .ptr{
+    position:absolute; top:-5px; width:3px; height:20px; background:var(--text);
+    border-radius:2px; transform:translateX(50%); box-shadow:0 0 8px rgba(0,0,0,0.3);
+    transition: left 0.4s ease-out;
+  }
+  .gauge-labels{ display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-bottom:4px; margin-top:14px; }
+
+  .chip-row{ display:flex; gap:7px; margin-bottom:16px; overflow-x:auto; scrollbar-width:none;}
+  .chip-row::-webkit-scrollbar{ display:none; }
+  .chip{
+    flex:0 0 auto; padding:8px 13px; border-radius:20px; font-size:11.5px; font-weight:700;
+    border:1px solid var(--line); color:var(--muted); background:var(--surface); cursor:pointer; white-space:nowrap;
+  }
+  .chip.on{ background:var(--violet); border-color:var(--violet); color:white; }
+  :root[data-theme="light"] .chip.on { color: #FFFFFF; }
+
+  .age-stats{ display:flex; gap:8px; margin-top:14px; }
+  .age-stat{ flex:1; background:var(--surface2); border-radius:12px; padding:10px 6px; text-align:center; }
+  .age-stat b{ display:block; font-family:'IBM Plex Mono',monospace; font-size:16px; color:var(--gold); }
+  .age-stat span{ font-size:9.5px; color:var(--muted); }
+
+  /* ---- Settings overlay ---- */
+  #overlay, #historyOverlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.55); display:none;
+    align-items:flex-end; justify-content:center; z-index:20;
+  }
+  #overlay.on, #historyOverlay.on{ display:flex; }
+  #sheet, .sheet-box{
+    width:100%; max-width:460px; background:var(--surface); border-radius:20px 20px 0 0;
+    padding:20px 20px calc(20px + env(safe-area-inset-bottom)); border:1px solid var(--line); border-bottom:none;
+    max-height:85vh; overflow-y:auto;
+  }
+  #sheet h3{ margin:0 0 10px; font-size:14px; color:var(--amber); }
+  #sheet p{ font-size:12px; color:var(--muted); line-height:1.9; margin:0 0 12px;}
+  #sheet .row2{ display:flex; gap:10px; margin-top:14px; }
+  #sheet button.act{
+    flex:1; padding:11px 0; border-radius:10px; border:none; font-weight:700; font-size:13px; cursor:pointer;
+  }
+  #sheet .close{ background:linear-gradient(135deg, #F2A93B, #D9B24C); color:#14201B; }
+  .settings-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+  .settings-grid label { font-size:11px; color:var(--muted); display:block; margin-bottom:4px; font-weight:600; }
+  .settings-grid input { width:100%; background:var(--surface2); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-family:'IBM Plex Mono', monospace; font-size:13px; direction:ltr; }
+
+  .shamsi-selector { display:flex; gap:8px; margin-bottom:14px; }
+  .shamsi-selector select, .tool-select { flex:1; background:var(--surface2); color:var(--text); border:1px solid var(--line); border-radius:12px; padding:12px; font-family:'Vazirmatn'; font-size:14px; outline:none; }
+  .tool-select { width: 100%; margin-bottom: 14px; }
+
+  /* ---- QR tool ---- */
+  .qr-type-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:18px; }
+  .qr-type{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    padding:10px 4px; border-radius:14px; border:1px solid var(--line);
+    background:var(--surface); cursor:pointer;
+  }
+  .qr-type .qi{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:17px; background:var(--surface2); }
+  .qr-type .qn{ font-size:10px; font-weight:700; color:var(--muted); }
+  .qr-type.on{ border-color:var(--teal); background:rgba(89,195,180,0.10); }
+  .qr-type.on .qn{ color:var(--teal); }
+  .qr-fields{ display:none; }
+  .qr-fields.on{ display:block; }
+  #qrCanvasBox{ display:flex; justify-content:center; padding:18px; background:#fff; border-radius:16px; margin-bottom:14px; }
+  .btn-secondary{
+    width:100%; padding:12px 0; border-radius:12px; border:1px solid var(--line); cursor:pointer;
+    font-weight:700; font-size:13px; margin-bottom:10px; background:var(--surface2); color:var(--text);
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="brand">
+      <div class="mark">🧮</div>
+      <h1>محاسبه‌گر مالی<b>ارز · طلا · کریپتو</b></h1>
+    </div>
+    <div class="header-actions">
+      <div class="circle-btn" id="historyBtn" onclick="openHistory()">🕐</div>
+      <div class="circle-btn" id="themeBtn" onclick="toggleTheme()">🌓</div>
+      <div class="circle-btn" id="settingsBtn" onclick="openSettings()">⚙️</div>
+    </div>
+  </header>
+
+  <div class="main-content">
+    
+    <div id="screen">
+      <div id="expr">0</div>
+      <div id="result">0</div>
+      <div id="memChip">M</div>
+    </div>
+
+    <!-- CALCULATOR VIEW -->
+    <div class="view active" id="view-calc">
+      <div id="sciToggle" onclick="toggleSci()">🔬 نمایش / مخفی‌سازی توابع پیشرفته علمی</div>
+      
+      <div id="sciRows">
+        <div class="row">
+          <div class="key fn" onclick="applyFn('sin')">sin</div>
+          <div class="key fn" onclick="applyFn('cos')">cos</div>
+          <div class="key fn" onclick="applyFn('tan')">tan</div>
+          <div class="key fn" onclick="applyFn('ln')">ln</div>
+          <div class="key fn" onclick="applyFn('log')">log</div>
+        </div>
+        <div class="row">
+          <div class="key fn" onclick="applyFn('sqrt')">√</div>
+          <div class="key fn" onclick="applyFn('sq')">x²</div>
+          <div class="key op" onclick="append('^')">x^y</div>
+          <div class="key fn" onclick="append('3.14159265')">π</div>
+          <div class="key fn" onclick="append('2.71828182')">e</div>
+        </div>
+        <div class="row">
+          <div class="key fn" onclick="memAdd()">M+</div>
+          <div class="key fn" onclick="memSub()">M−</div>
+          <div class="key fn" onclick="memRecall()">MR</div>
+          <div class="key fn" onclick="memClear()">MC</div>
+          <div class="key op" onclick="append('(')">(</div>
+        </div>
+        <div class="row">
+          <div class="key fn" onclick="applyFn('fact')">x!</div>
+          <div class="key fn" onclick="applyFn('inv')">1/x</div>
+          <div class="key op" onclick="append(')')">)</div>
+          <div class="key fn" onclick="applyFn('rand')">rand</div>
+          <div class="key fn" onclick="applyFn('cube')">x³</div>
+        </div>
+      </div>
+
+      <div id="keypad">
+        <div class="row">
+          <div class="key danger" onclick="clearAll()">AC</div>
+          <div class="key" onclick="backspace()">⌫</div>
+          <div class="key op" onclick="applyFn('percent')">%</div>
+          <div class="key op" onclick="append('÷')">÷</div>
+        </div>
+        <div class="row">
+          <div class="key" onclick="append('7')">7</div>
+          <div class="key" onclick="append('8')">8</div>
+          <div class="key" onclick="append('9')">9</div>
+          <div class="key op" onclick="append('×')">×</div>
+        </div>
+        <div class="row">
+          <div class="key" onclick="append('4')">4</div>
+          <div class="key" onclick="append('5')">5</div>
+          <div class="key" onclick="append('6')">6</div>
+          <div class="key op" onclick="append('−')">−</div>
+        </div>
+        <div class="row">
+          <div class="key" onclick="append('1')">1</div>
+          <div class="key" onclick="append('2')">2</div>
+          <div class="key" onclick="append('3')">3</div>
+          <div class="key op" onclick="append('+')">+</div>
+        </div>
+        <div class="row">
+          <div class="key" onclick="applyFn('neg')">±</div>
+          <div class="key" onclick="append('0')">0</div>
+          <div class="key" onclick="append('.')">.</div>
+          <div class="key eq" onclick="doEquals()">=</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RATES VIEW -->
+    <div class="view" id="view-rates">
+      <div id="ratesArea">
+        <div class="subtabs">
+          <div class="subtab on" data-c="market" id="tab-market" onclick="showRateList('market')"><span class="dot"></span>🇮🇷 بازار آزاد</div>
+          <div class="subtab" data-c="global" id="tab-global" onclick="showRateList('global')"><span class="dot"></span>🌍 جهانی</div>
+          <div class="subtab" data-c="gold" id="tab-gold" onclick="showRateList('gold')"><span class="dot"></span>🪙 طلا</div>
+          <div class="subtab" data-c="crypto" id="tab-crypto" onclick="showRateList('crypto')"><span class="dot"></span>◈ کریپتو</div>
+        </div>
+
+        <div class="ratelist market on" id="list-market">
+          <div class="statusrow">
+            <span class="updated">لمس = ماشین‌حساب / تنظیم قیمت در ⚙️ بالای صفحه</span>
+          </div>
+          <div class="section-label">ارزها (تومان)</div>
+          <div id="marketCards"></div>
+          <div class="section-label">طلا و سکه داخلی (تومان)</div>
+          <div id="goldIranCards"></div>
+          <div class="hint">برای تغییر قیمت‌ها، چرخ‌دنده بالای صفحه را لمس کنید.</div>
+        </div>
+
+        <div class="ratelist global" id="list-global">
+          <div class="statusrow">
+            <span class="updated" id="globalUpdated">در حال دریافت...</span>
+            <button class="refresh" onclick="fetchGlobalRates()">↻ بروزرسانی</button>
+          </div>
+          <div id="globalCards"></div>
+        </div>
+
+        <div class="ratelist gold" id="list-gold">
+          <div class="statusrow">
+            <span class="updated" id="goldUpdated">در حال دریافت...</span>
+            <button class="refresh" onclick="fetchGoldRates()">↻ بروزرسانی</button>
+          </div>
+          <div id="goldCards"></div>
+        </div>
+
+        <div class="ratelist crypto" id="list-crypto">
+          <div class="statusrow">
+            <span class="updated" id="cryptoUpdated">در حال دریافت...</span>
+            <button class="refresh" onclick="fetchCryptoRates()">↻ بروزرسانی</button>
+          </div>
+          <div id="cryptoCards"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOLS VIEW -->
+    <div class="view" id="view-tools">
+      <div id="toolsArea">
+        <div id="toolsHome">
+          <div id="pinnedShortcuts" style="display:none;"></div>
+          <div class="tool-cat-header" onclick="toggleToolCategory('cat-basic')">
+            <div class="tool-section-title">🧮 محاسبات کاربردی</div>
+            <div class="tool-cat-arrow" id="arrow-cat-basic">⌄</div>
+          </div>
+          <div class="tool-list" id="list-cat-basic">
+            <div class="tool-row" onclick="openTool('bmi')">
+              <div class="ticon" style="background:rgba(89,195,180,0.14); color:var(--teal);">⚖️</div>
+              <div class="trow-mid"><div class="tname">قد و وزن (BMI)</div><div class="tdesc">شاخص توده بدنی و وضعیت سلامت</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('age')">
+              <div class="ticon" style="background:rgba(217,178,76,0.14); color:var(--gold);">🎂</div>
+              <div class="trow-mid"><div class="tname">محاسبه سن (شمسی)</div><div class="tdesc">سن دقیق، روزهای مانده تا تولد</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('convdate')">
+              <div class="ticon" style="background:rgba(111,177,217,0.14); color:var(--sky);">📅</div>
+              <div class="trow-mid"><div class="tname">تبدیل تاریخ جامع</div><div class="tdesc">شمسی، میلادی و قمری</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('percent')">
+              <div class="ticon" style="background:rgba(156,141,224,0.14); color:var(--violet);">٪</div>
+              <div class="trow-mid"><div class="tname">درصدگیری مبلغ</div><div class="tdesc">تخفیف، افزایش، نسبت دو عدد</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('discount')">
+              <div class="ticon" style="background:rgba(211,104,76,0.14); color:var(--rust);">🏷️</div>
+              <div class="trow-mid"><div class="tname">تخفیف و مالیات</div><div class="tdesc">قیمت نهایی و مقدار سود</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('unit')">
+              <div class="ticon" style="background:rgba(217,178,76,0.14); color:var(--gold);">📐</div>
+              <div class="trow-mid"><div class="tname">مبدل واحدها</div><div class="tdesc">طول، وزن، حجم، دما، حافظه دیجیتال</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+          </div>
+
+          <div class="tool-cat-header" onclick="toggleToolCategory('cat-fin')">
+            <div class="tool-section-title">💰 مالی و روزمره</div>
+            <div class="tool-cat-arrow" id="arrow-cat-fin">⌄</div>
+          </div>
+          <div class="tool-list" id="list-cat-fin">
+            <div class="tool-row" onclick="openTool('loan')">
+              <div class="ticon" style="background:rgba(211,104,76,0.14); color:var(--rust);">🏦</div>
+              <div class="trow-mid"><div class="tname">وام و اقساط</div><div class="tdesc">مبلغ هر قسط و کل سود پرداختی</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('deposit')">
+              <div class="ticon" style="background:rgba(89,195,180,0.14); color:var(--teal);">💵</div>
+              <div class="trow-mid"><div class="tname">سود سپرده بانکی</div><div class="tdesc">سود ماهانه و کل سپرده</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('split')">
+              <div class="ticon" style="background:rgba(217,178,76,0.14); color:var(--gold);">🧾</div>
+              <div class="trow-mid"><div class="tname">تقسیم صورت‌حساب (دنگی)</div><div class="tdesc">سهم هر نفر با احتساب انعام</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('trade')">
+              <div class="ticon" style="background:rgba(156,141,224,0.14); color:var(--violet);">📈</div>
+              <div class="trow-mid"><div class="tname">سود و زیان معامله</div><div class="tdesc">خرید و فروش ارز، طلا یا هرچیز دیگه</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('duration')">
+              <div class="ticon" style="background:rgba(111,177,217,0.14); color:var(--sky);">⏳</div>
+              <div class="trow-mid"><div class="tname">فاصله بین دو تاریخ/ساعت</div><div class="tdesc">چند روز، ساعت و دقیقه فاصله‌ست</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+          </div>
+
+          <div class="tool-cat-header" onclick="toggleToolCategory('cat-qr')">
+            <div class="tool-section-title">🔐 QR و امنیت</div>
+            <div class="tool-cat-arrow" id="arrow-cat-qr">⌄</div>
+          </div>
+          <div class="tool-list" id="list-cat-qr">
+            <div class="tool-row" onclick="openTool('qr')">
+              <div class="ticon" style="background:rgba(89,195,180,0.14); color:var(--teal);">🔳</div>
+              <div class="trow-mid"><div class="tname">ساخت QR کد</div><div class="tdesc">وبسایت، وای‌فای، تلگرام و...</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('scan')">
+              <div class="ticon" style="background:rgba(111,177,217,0.14); color:var(--sky);">📷</div>
+              <div class="trow-mid"><div class="tname">اسکن QR</div><div class="tdesc">با تشخیص هوشمند نوع محتوا</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('pass')">
+              <div class="ticon" style="background:rgba(156,141,224,0.14); color:var(--violet);">🔑</div>
+              <div class="trow-mid"><div class="tname">رمز عبور قوی</div><div class="tdesc">تا ۱۵۰ کاراکتر، کاملاً تصادفی</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('stego')">
+              <div class="ticon" style="background:rgba(211,104,76,0.14); color:var(--rust);">🖼️</div>
+              <div class="trow-mid"><div class="tname">مخفی‌سازی متن در عکس</div><div class="tdesc">پنهان کردن و استخراج پیام</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+            <div class="tool-row" onclick="openTool('lock')">
+              <div class="ticon" style="background:rgba(217,178,76,0.14); color:var(--gold);">🔐</div>
+              <div class="trow-mid"><div class="tname">رمزنگاری متن</div><div class="tdesc">قفل کردن متن با رمز عبور</div></div>
+              <div class="tarrow">‹</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BMI Tool -->
+        <div class="toolpage" id="tool-bmi">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-row">
+            <div>
+              <div class="field-label">قد (سانتی‌متر)</div>
+              <input class="field" id="bmiHeight" type="number" placeholder="144">
+            </div>
+            <div>
+              <div class="field-label">وزن (کیلوگرم)</div>
+              <input class="field" id="bmiWeight" type="number" placeholder="90">
+            </div>
+          </div>
+          <button class="btn-primary" onclick="calcBMI()">محاسبه BMI</button>
+          
+          <div class="result-box" id="bmiResult">
+            <div class="result-big-bmi" id="bmiValue">--</div>
+            <div class="result-tag" id="bmiTag">--</div>
+            <div class="result-advice-text" id="bmiAdvice"></div>
+            
+            <div class="gauge-labels"><span>کم‌وزن</span><span>طبیعی</span><span>اضافه‌وزن</span><span>چاق</span></div>
+            <div class="gauge"><div class="ptr" id="bmiPtr" style="left:0%"></div></div>
+          </div>
+        </div>
+
+        <!-- Age Tool -->
+        <div class="toolpage" id="tool-age">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">تاریخ تولد شما (هجری شمسی)</div>
+          <div class="shamsi-selector">
+            <select id="shamsiYear"></select>
+            <select id="shamsiMonth" onchange="updateShamsiDays()">
+              <option value="1">فروردین</option><option value="2">اردیبهشت</option><option value="3">خرداد</option>
+              <option value="4">تیر</option><option value="5">مرداد</option><option value="6">شهریور</option>
+              <option value="7">مهر</option><option value="8">آبان</option><option value="9">آذر</option>
+              <option value="10">دی</option><option value="11">بهمن</option><option value="12">اسفند</option>
+            </select>
+            <select id="shamsiDay"></select>
+          </div>
+          <button class="btn-primary" onclick="calcAgeShamsi()">محاسبه سن دقیق</button>
+          <div class="result-box" id="ageResultBox">
+            <div class="result-big" style="font-size:20px; font-weight:700;" id="ageMain">
+              <span id="resYear" style="color:var(--amber);">--</span> سال و <span id="resMonth" style="color:var(--amber);">--</span> ماه و <span id="resDay" style="color:var(--amber);">--</span> روز
+            </div>
+            <div style="font-size:11px; color:var(--muted); margin-top:4px;">سن دقیق شما بر اساس تقویم خورشیدی</div>
+            <div class="age-stats">
+              <div class="age-stat"><b id="ageDays">--</b><span>کل روزهای عمر</span></div>
+              <div class="age-stat"><b id="ageToBday">--</b><span>روز تا تولد بعدی</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Universal Date Converter Tool -->
+        <div class="toolpage" id="tool-convdate">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">نوع تقویم ورودی را انتخاب کنید:</div>
+          <select class="tool-select" id="convSourceType" onchange="updateConvSelectors()">
+            <option value="shamsi">خورشیدی (شمسی)</option>
+            <option value="gregorian">میلادی (Gregorian)</option>
+            <option value="hijri">قمری (Hijri)</option>
+          </select>
+          
+          <div class="field-label">تاریخ مورد نظر جهت تبدیل:</div>
+          <div class="shamsi-selector">
+            <select id="convYear"></select>
+            <select id="convMonth"></select>
+            <select id="convDay"></select>
+          </div>
+          
+          <button class="btn-primary" onclick="processDateConversion()">تبدیل تاریخ</button>
+          
+          <div class="result-box" id="convResultBox" style="text-align: right; padding: 15px;">
+            <div class="section-label" style="margin-top:0;">نتایج تبدیل معادل:</div>
+            <div style="margin: 8px 0; font-size:13px;">📅 خورشیدی: <b id="outShamsi" style="color:var(--amber); font-family:'IBM Plex Mono',sans-serif;">--</b></div>
+            <div style="margin: 8px 0; font-size:13px;">📅 میلادی: <b id="outGregorian" style="color:var(--sky); font-family:'IBM Plex Mono',sans-serif;">--</b></div>
+            <div style="margin: 8px 0; font-size:13px;">📅 قمری: <b id="outHijri" style="color:var(--teal); font-family:'IBM Plex Mono',sans-serif;">--</b></div>
+          </div>
+        </div>
+
+        <!-- Percent Tool -->
+        <div class="toolpage" id="tool-percent">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="chip-row" id="percentChips">
+            <div class="chip on" data-m="of" onclick="setPercentMode('of')">چند درصد از مبلغ</div>
+            <div class="chip" data-m="change" onclick="setPercentMode('change')">افزایش/کاهش</div>
+            <div class="chip" data-m="ratio" onclick="setPercentMode('ratio')">نسبت عدد جزء به کل</div>
+          </div>
+          <div id="pf-of">
+            <div class="field-row">
+              <div><div class="field-label">درصد (٪)</div><input class="field" id="ofPercent" type="number"></div>
+              <div><div class="field-label">مبلغ (تومان)</div><input class="field" id="ofAmount" type="number"></div>
+            </div>
+          </div>
+          <div id="pf-change" style="display:none;">
+            <div class="field-row">
+              <div><div class="field-label">مبلغ اولیه</div><input class="field" id="chAmount" type="number"></div>
+              <div><div class="field-label">درصد تغییر</div><input class="field" id="chPercent" type="number"></div>
+            </div>
+            <div class="chip-row">
+              <div class="chip on" data-d="inc" onclick="setChangeDir('inc')">افزایش (+)</div>
+              <div class="chip" data-d="dec" onclick="setChangeDir('dec')">کاهش (−)</div>
+            </div>
+          </div>
+          <div id="pf-ratio" style="display:none;">
+            <div class="field-row">
+              <div><div class="field-label">عدد جزء</div><input class="field" id="raPart" type="number"></div>
+              <div><div class="field-label">عدد کل</div><input class="field" id="raTotal" type="number"></div>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="calcPercent()">محاسبه</button>
+          <div class="result-box" id="percentResultBox">
+            <div class="result-big-pct" id="percentMain" style="font-family:'IBM Plex Mono'; font-size:28px; font-weight:700;">--</div>
+            <div class="result-sub" id="percentSub"></div>
+          </div>
+        </div>
+
+        <!-- Discount Tool -->
+        <div class="toolpage" id="tool-discount">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">قیمت اصلی (تومان)</div>
+          <input class="field" id="dsPrice" type="number">
+          <div class="field-row">
+            <div><div class="field-label">درصد تخفیف (٪)</div><input class="field" id="dsDiscount" type="number"></div>
+            <div><div class="field-label">درصد مالیات (٪)</div><input class="field" id="dsTax" type="number"></div>
+          </div>
+          <button class="btn-primary" onclick="calcDiscount()">محاسبه قیمت نهایی</button>
+          <div class="result-box" id="discountResultBox">
+            <div class="result-big-ds" id="discountMain" style="font-family:'IBM Plex Mono'; font-size:28px; font-weight:700;">--</div>
+            <div class="result-sub" id="discountSub"></div>
+          </div>
+        </div>
+
+        <!-- QR Tool -->
+        <div class="toolpage" id="tool-qr">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">نوع QR کد را انتخاب کنید:</div>
+          <div class="qr-type-grid" id="qrTypeGrid">
+            <div class="qr-type on" data-t="url" onclick="setQrType('url')"><div class="qi" style="color:#2D8A6E;">🌐</div><div class="qn">وبسایت</div></div>
+            <div class="qr-type" data-t="text" onclick="setQrType('text')"><div class="qi" style="color:#3B5BDB;">✎</div><div class="qn">متن</div></div>
+            <div class="qr-type" data-t="wifi" onclick="setQrType('wifi')"><div class="qi" style="color:#D9B24C;">📶</div><div class="qn">وای‌فای</div></div>
+            <div class="qr-type" data-t="sms" onclick="setQrType('sms')"><div class="qi" style="color:#3B5BDB;">💬</div><div class="qn">پیامک</div></div>
+            <div class="qr-type" data-t="tel" onclick="setQrType('tel')"><div class="qi" style="color:#D9B24C;">📞</div><div class="qn">شماره تماس</div></div>
+            <div class="qr-type" data-t="whatsapp" onclick="setQrType('whatsapp')"><div class="qi" style="color:#25D366;">🟢</div><div class="qn">واتساپ</div></div>
+            <div class="qr-type" data-t="instagram" onclick="setQrType('instagram')"><div class="qi" style="color:#D3684C;">📷</div><div class="qn">اینستاگرام</div></div>
+            <div class="qr-type" data-t="vcard" onclick="setQrType('vcard')"><div class="qi" style="color:#D3684C;">🪪</div><div class="qn">کارت ویزیت</div></div>
+            <div class="qr-type" data-t="telegram" onclick="setQrType('telegram')"><div class="qi" style="color:#3B9FE0;">✈️</div><div class="qn">تلگرام</div></div>
+          </div>
+
+          <div class="qr-fields on" id="qrf-url">
+            <div class="field-label">آدرس وبسایت</div>
+            <input class="field" id="qrUrl" placeholder="example.com">
+          </div>
+          <div class="qr-fields" id="qrf-text">
+            <div class="field-label">متن دلخواه</div>
+            <input class="field" id="qrText" placeholder="هر متنی...">
+          </div>
+          <div class="qr-fields" id="qrf-wifi">
+            <div class="field-label">نام شبکه (SSID)</div>
+            <input class="field" id="qrWifiSsid">
+            <div class="field-label">رمز عبور</div>
+            <input class="field" id="qrWifiPass">
+            <div class="field-label">نوع رمزنگاری</div>
+            <select class="tool-select" id="qrWifiEnc">
+              <option value="WPA">WPA / WPA2</option>
+              <option value="WEP">WEP</option>
+              <option value="nopass">بدون رمز</option>
+            </select>
+          </div>
+          <div class="qr-fields" id="qrf-sms">
+            <div class="field-label">شماره موبایل</div>
+            <input class="field" id="qrSmsPhone" placeholder="09xxxxxxxxx">
+            <div class="field-label">متن پیامک</div>
+            <input class="field" id="qrSmsMsg">
+          </div>
+          <div class="qr-fields" id="qrf-tel">
+            <div class="field-label">شماره تماس</div>
+            <input class="field" id="qrTelPhone" placeholder="09xxxxxxxxx">
+          </div>
+          <div class="qr-fields" id="qrf-whatsapp">
+            <div class="field-label">شماره واتساپ (با کد کشور، بدون +)</div>
+            <input class="field" id="qrWaPhone" placeholder="989xxxxxxxxx">
+            <div class="field-label">پیام (اختیاری)</div>
+            <input class="field" id="qrWaMsg">
+          </div>
+          <div class="qr-fields" id="qrf-instagram">
+            <div class="field-label">آیدی اینستاگرام (بدون @)</div>
+            <input class="field" id="qrIgUser" placeholder="username">
+          </div>
+          <div class="qr-fields" id="qrf-vcard">
+            <div class="field-label">نام و نام خانوادگی</div>
+            <input class="field" id="qrVName">
+            <div class="field-row">
+              <div><div class="field-label">شماره تماس</div><input class="field" id="qrVPhone"></div>
+              <div><div class="field-label">ایمیل</div><input class="field" id="qrVEmail"></div>
+            </div>
+            <div class="field-label">سازمان / شغل (اختیاری)</div>
+            <input class="field" id="qrVOrg">
+          </div>
+          <div class="qr-fields" id="qrf-telegram">
+            <div class="field-label">آیدی تلگرام (بدون @) — در صورت داشتن، اولویت با اینه</div>
+            <input class="field" id="qrTgUser" placeholder="username">
+            <div class="field-label">یا شماره تلفن (اگر یوزرنیم نداری)</div>
+            <input class="field" id="qrTgPhone" placeholder="989xxxxxxxxx">
+            <div class="hint" style="margin-top:-6px;">لینک با شماره تلفن فقط وقتی کار می‌کند که آن شخص در تنظیمات حریم خصوصی تلگرامش پیدا شدن با شماره را باز گذاشته باشد. اگر یوزرنیم را وارد کنی، همیشه کار می‌کند.</div>
+          </div>
+
+          <div class="section-label">لوگوی وسط QR (اختیاری)</div>
+          <div class="qr-type-grid" style="grid-template-columns:repeat(5,1fr); margin-bottom:14px;">
+            <div class="qr-type on" data-l="none" onclick="setQrLogo('none')"><div class="qi">🚫</div><div class="qn">هیچ‌کدام</div></div>
+            <div class="qr-type" data-l="instagram" onclick="setQrLogo('instagram')"><div class="qi" style="color:#D3684C;">📷</div><div class="qn">اینستاگرام</div></div>
+            <div class="qr-type" data-l="whatsapp" onclick="setQrLogo('whatsapp')"><div class="qi" style="color:#25D366;">🟢</div><div class="qn">واتساپ</div></div>
+            <div class="qr-type" data-l="telegram" onclick="setQrLogo('telegram')"><div class="qi" style="color:#3B9FE0;">✈️</div><div class="qn">تلگرام</div></div>
+            <div class="qr-type" data-l="custom" onclick="setQrLogo('custom')"><div class="qi">🖼️</div><div class="qn">عکس دلخواه</div></div>
+          </div>
+          <input type="file" accept="image/*" id="qrLogoFile" style="display:none;" onchange="onQrLogoFile(event)">
+          <div class="hint" id="qrLogoHint" style="display:none; margin-top:-10px;">با انتخاب گزینه‌ی «عکس دلخواه»، یک عکس از گوشی انتخاب کن.</div>
+
+          <button class="btn-primary" onclick="generateQr()">ساخت QR کد</button>
+          <div id="qrCanvasBox" style="display:none;"></div>
+          <button class="btn-secondary" id="qrDownloadBtn" style="display:none;" onclick="downloadQr()">⬇ دانلود تصویر QR</button>
+        </div>
+
+        <!-- QR Scanner Tool -->
+        <div class="toolpage" id="tool-scan">
+          <div class="tool-back" onclick="closeToolScan()">→ بازگشت</div>
+          <div class="hint" style="margin-top:0;">دوربین را روبه‌روی QR کد بگیر — به‌محض تشخیص، دکمه‌ی مناسب همون‌جا نشون داده می‌شه.</div>
+          <div style="position:relative; border-radius:16px; overflow:hidden; background:#000; margin-bottom:14px;">
+            <video id="scanVideo" style="width:100%; display:block;" playsinline muted></video>
+            <div id="scanBox" style="position:absolute; inset:12%; border:2px solid var(--teal); border-radius:14px; opacity:0.6; pointer-events:none;"></div>
+          </div>
+          <canvas id="scanCanvas" style="display:none;"></canvas>
+          <button class="btn-primary" id="scanStartBtn" onclick="startScan()">📷 شروع اسکن</button>
+          <button class="btn-secondary" id="scanStopBtn" style="display:none;" onclick="stopScan()">توقف اسکن</button>
+
+          <div class="result-box" id="scanResultBox">
+            <div class="field-label" style="text-align:right;">محتوای شناسایی‌شده:</div>
+            <div class="field" style="word-break:break-all; white-space:pre-wrap; margin-bottom:10px;" id="scanRawText">--</div>
+            <div id="scanActions" style="display:flex; flex-direction:column; gap:8px;"></div>
+          </div>
+        </div>
+
+        <!-- Unit Converter Tool -->
+        <div class="toolpage" id="tool-unit">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="chip-row" id="unitChips">
+            <div class="chip on" data-c="length" onclick="setUnitCat('length')">طول</div>
+            <div class="chip" data-c="weight" onclick="setUnitCat('weight')">وزن</div>
+            <div class="chip" data-c="volume" onclick="setUnitCat('volume')">حجم</div>
+            <div class="chip" data-c="temp" onclick="setUnitCat('temp')">دما</div>
+            <div class="chip" data-c="digital" onclick="setUnitCat('digital')">حافظه دیجیتال</div>
+          </div>
+          <div class="field-label">از واحد</div>
+          <select class="tool-select" id="unitFrom" onchange="computeUnit()"></select>
+          <input class="field" id="unitValue" type="number" value="1" oninput="computeUnit()">
+          <div style="text-align:center; margin:-6px 0 10px;">
+            <button class="btn-secondary" style="width:auto; padding:8px 20px; margin:0;" onclick="swapUnit()">⇅ جابجایی واحدها</button>
+          </div>
+          <div class="field-label">به واحد</div>
+          <select class="tool-select" id="unitTo" onchange="computeUnit()"></select>
+          <div class="result-box on" style="margin-top:6px;">
+            <div class="result-big" style="font-size:26px; font-weight:700;" id="unitResult">--</div>
+          </div>
+        </div>
+
+        <!-- Loan / Installment Calculator -->
+        <div class="toolpage" id="tool-loan">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">مبلغ وام (تومان)</div>
+          <input class="field" id="loanAmount" type="number" placeholder="مثلاً 100000000">
+          <div class="field-row">
+            <div><div class="field-label">نرخ سود سالانه (٪)</div><input class="field" id="loanRate" type="number" placeholder="مثلاً 18"></div>
+            <div><div class="field-label">تعداد اقساط (ماه)</div><input class="field" id="loanMonths" type="number" placeholder="مثلاً 36"></div>
+          </div>
+          <button class="btn-primary" onclick="calcLoan()">محاسبه قسط</button>
+          <div class="result-box" id="loanResultBox">
+            <div class="result-big" id="loanMain" style="font-size:26px; font-weight:700;">--</div>
+            <div class="result-sub">مبلغ هر قسط ماهانه</div>
+            <div class="age-stats">
+              <div class="age-stat"><b id="loanTotal">--</b><span>کل بازپرداخت</span></div>
+              <div class="age-stat"><b id="loanInterest">--</b><span>کل سود پرداختی</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bank Deposit Calculator -->
+        <div class="toolpage" id="tool-deposit">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">مبلغ سپرده (تومان)</div>
+          <input class="field" id="depAmount" type="number" placeholder="مثلاً 50000000">
+          <div class="field-row">
+            <div><div class="field-label">نرخ سود سالانه (٪)</div><input class="field" id="depRate" type="number" placeholder="مثلاً 23"></div>
+            <div><div class="field-label">مدت (ماه)</div><input class="field" id="depMonths" type="number" placeholder="مثلاً 12"></div>
+          </div>
+          <button class="btn-primary" onclick="calcDeposit()">محاسبه سود</button>
+          <div class="result-box" id="depResultBox">
+            <div class="result-big" id="depMonthly" style="font-size:26px; font-weight:700;">--</div>
+            <div class="result-sub">سود ماهانه</div>
+            <div class="age-stats">
+              <div class="age-stat"><b id="depTotal">--</b><span>کل سود دوره</span></div>
+              <div class="age-stat"><b id="depFinal">--</b><span>مبلغ نهایی سپرده</span></div>
+            </div>
+            <div class="hint" style="margin-bottom:0;">محاسبه بر پایه سود ساده (غیرمرکب) است، مشابه روش رایج بانک‌ها.</div>
+          </div>
+        </div>
+
+        <!-- Bill Split Calculator -->
+        <div class="toolpage" id="tool-split">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">مبلغ کل صورت‌حساب (تومان)</div>
+          <input class="field" id="splitAmount" type="number" placeholder="مثلاً 1200000">
+          <div class="field-row">
+            <div><div class="field-label">تعداد نفرات</div><input class="field" id="splitPeople" type="number" placeholder="مثلاً 4"></div>
+            <div><div class="field-label">درصد انعام (اختیاری)</div><input class="field" id="splitTip" type="number" placeholder="مثلاً 10"></div>
+          </div>
+          <button class="btn-primary" onclick="calcSplit()">محاسبه سهم هرنفر</button>
+          <div class="result-box" id="splitResultBox">
+            <div class="result-big" id="splitMain" style="font-size:26px; font-weight:700;">--</div>
+            <div class="result-sub">سهم هر نفر</div>
+            <div class="result-sub" id="splitSub" style="margin-top:8px;"></div>
+          </div>
+        </div>
+
+        <!-- Trade Profit/Loss Calculator -->
+        <div class="toolpage" id="tool-trade">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-row">
+            <div><div class="field-label">قیمت خرید (هر واحد)</div><input class="field" id="tradeBuy" type="number"></div>
+            <div><div class="field-label">قیمت فعلی/فروش (هر واحد)</div><input class="field" id="tradeSell" type="number"></div>
+          </div>
+          <div class="field-label">مقدار (تعداد واحد)</div>
+          <input class="field" id="tradeQty" type="number" value="1">
+          <button class="btn-primary" onclick="calcTrade()">محاسبه سود و زیان</button>
+          <div class="result-box" id="tradeResultBox">
+            <div class="result-big" id="tradeMain" style="font-size:26px; font-weight:700;">--</div>
+            <div class="result-tag" id="tradeTag" style="margin-top:10px;">--</div>
+          </div>
+        </div>
+
+        <!-- Duration Calculator -->
+        <div class="toolpage" id="tool-duration">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">تاریخ و ساعت شروع (شمسی)</div>
+          <div class="shamsi-selector">
+            <select id="durStartY" class="tool-select"></select>
+            <select id="durStartM" class="tool-select" onchange="updateDurDays('start')">
+              <option value="1">فروردین</option><option value="2">اردیبهشت</option><option value="3">خرداد</option>
+              <option value="4">تیر</option><option value="5">مرداد</option><option value="6">شهریور</option>
+              <option value="7">مهر</option><option value="8">آبان</option><option value="9">آذر</option>
+              <option value="10">دی</option><option value="11">بهمن</option><option value="12">اسفند</option>
+            </select>
+            <select id="durStartD" class="tool-select"></select>
+          </div>
+          <input class="field" id="durStartTime" type="time" value="00:00">
+
+          <div class="field-label" style="margin-top:6px;">تاریخ و ساعت پایان (شمسی)</div>
+          <div class="shamsi-selector">
+            <select id="durEndY" class="tool-select"></select>
+            <select id="durEndM" class="tool-select" onchange="updateDurDays('end')">
+              <option value="1">فروردین</option><option value="2">اردیبهشت</option><option value="3">خرداد</option>
+              <option value="4">تیر</option><option value="5">مرداد</option><option value="6">شهریور</option>
+              <option value="7">مهر</option><option value="8">آبان</option><option value="9">آذر</option>
+              <option value="10">دی</option><option value="11">بهمن</option><option value="12">اسفند</option>
+            </select>
+            <select id="durEndD" class="tool-select"></select>
+          </div>
+          <input class="field" id="durEndTime" type="time" value="00:00">
+
+          <button class="btn-primary" onclick="calcDuration()">محاسبه فاصله</button>
+          <div class="result-box" id="durResultBox">
+            <div class="result-big" id="durMain" style="font-size:24px; font-weight:700;">--</div>
+            <div class="age-stats">
+              <div class="age-stat"><b id="durDays">--</b><span>کل روزها</span></div>
+              <div class="age-stat"><b id="durHours">--</b><span>کل ساعت‌ها</span></div>
+              <div class="age-stat"><b id="durMinutes">--</b><span>کل دقیقه‌ها</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Password Generator Tool -->
+        <div class="toolpage" id="tool-pass">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="field-label">سطح رمز عبور</div>
+          <div class="chip-row" id="passLevelChips">
+            <div class="chip on" data-lv="custom" onclick="setPassLevel('custom')">دستی</div>
+            <div class="chip" data-lv="medium" onclick="setPassLevel('medium')">متوسط</div>
+            <div class="chip" data-lv="strong" onclick="setPassLevel('strong')">قوی</div>
+            <div class="chip" data-lv="advanced" onclick="setPassLevel('advanced')">پیشرفته</div>
+          </div>
+          <div class="field-label">طول رمز عبور: <b id="passLenLabel" style="color:var(--violet);">16</b></div>
+          <input class="field range-input" id="passLen" type="range" min="6" max="150" value="16" oninput="updatePassLenSlider(this); setPassLevel('custom', true);">
+          <div class="chip-row">
+            <div class="chip on" id="passUpper" onclick="this.classList.toggle('on'); setPassLevel('custom', true);">حروف بزرگ ABC</div>
+            <div class="chip on" id="passLower" onclick="this.classList.toggle('on'); setPassLevel('custom', true);">حروف کوچک abc</div>
+          </div>
+          <div class="chip-row">
+            <div class="chip on" id="passNum" onclick="this.classList.toggle('on'); setPassLevel('custom', true);">اعداد 123</div>
+            <div class="chip on" id="passSym" onclick="this.classList.toggle('on'); setPassLevel('custom', true);">نشانه‌ها !@#</div>
+          </div>
+          <div class="chip-row">
+            <div class="chip" id="passNoAmbig" onclick="this.classList.toggle('on')">حذف کاراکترهای مشابه (O/0 ، l/1/I)</div>
+          </div>
+          <div class="chip-row">
+            <div class="chip" id="passObscure" onclick="this.classList.toggle('on')">شامل کاراکترهای مبهم { } [ ] ( ) / \ ' " ~ , ; . :</div>
+          </div>
+          <button class="btn-primary" onclick="generatePassword()">🔑 تولید رمز عبور</button>
+          <div class="result-box" id="passResultBox">
+            <div class="field" id="passOutput" style="font-size:18px; text-align:center; word-break:break-all;">--</div>
+            <div class="result-tag" id="passStrength" style="margin-top:10px;">--</div>
+            <button class="btn-secondary" style="margin-top:10px;" onclick="copyPassword()">📋 کپی رمز</button>
+          </div>
+        </div>
+
+        <!-- Steganography Tool -->
+        <div class="toolpage" id="tool-stego">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="chip-row">
+            <div class="chip on" data-s="hide" onclick="setStegoMode('hide')">پنهان کردن متن</div>
+            <div class="chip" data-s="reveal" onclick="setStegoMode('reveal')">استخراج متن</div>
+          </div>
+          <div class="hint" style="margin-top:0;">⚠️ خروجی حتماً باید PNG بمونه. اگه از واتساپ/تلگرام به‌صورت عکس معمولی بفرستی، فشرده می‌شه و متن مخفی از بین می‌ره. به‌صورت «فایل» (Document) بفرست.</div>
+
+          <div id="stego-hide">
+            <div class="field-label">۱. یک عکس انتخاب کن</div>
+            <input type="file" accept="image/*" class="field" id="stegoHideImg" onchange="loadStegoImage(event)">
+            <div class="field-label">۲. متن مخفی</div>
+            <input class="field" id="stegoHideText" placeholder="متنی که می‌خوای مخفی بشه...">
+            <button class="btn-primary" onclick="hideStegoText()">🔒 مخفی‌سازی و ساخت عکس</button>
+            <canvas id="stegoCanvas" style="display:none;"></canvas>
+            <div id="stegoHidePreview" style="display:none; text-align:center; margin-bottom:12px;"></div>
+            <button class="btn-secondary" id="stegoDownloadBtn" style="display:none;" onclick="downloadStego()">⬇ دانلود عکس نهایی (PNG)</button>
+          </div>
+
+          <div id="stego-reveal" style="display:none;">
+            <div class="field-label">عکسی که متن داخلش مخفی شده را انتخاب کن</div>
+            <input type="file" accept="image/*" class="field" id="stegoRevealImg" onchange="revealStegoText(event)">
+            <div class="result-box" id="stegoRevealBox">
+              <div class="field-label" style="text-align:right;">متن استخراج‌شده:</div>
+              <div class="field" style="word-break:break-all; white-space:pre-wrap;" id="stegoRevealedText">--</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Text Encryption Tool -->
+        <div class="toolpage" id="tool-lock">
+          <div class="tool-back" onclick="closeTool()">→ بازگشت</div>
+          <div class="chip-row">
+            <div class="chip on" data-lk="enc" onclick="setLockMode('enc')">قفل کردن متن</div>
+            <div class="chip" data-lk="dec" onclick="setLockMode('dec')">باز کردن متن</div>
+          </div>
+          <div class="hint" style="margin-top:0;">با رمزنگاری AES-256 واقعی محافظت می‌شه. اگه رمز عبور رو فراموش کنی، هیچ راهی برای بازیابی متن نیست.</div>
+
+          <div id="lock-enc">
+            <div class="field-label">متن اصلی</div>
+            <textarea class="field" id="lockPlainText" rows="3" style="resize:vertical;"></textarea>
+            <div class="field-label">رمز عبور</div>
+            <input class="field" id="lockPassEnc" type="password">
+            <button class="btn-primary" onclick="encryptTextTool()">🔒 قفل کردن متن</button>
+            <div class="result-box" id="lockEncResultBox">
+              <div class="field-label" style="text-align:right;">متن قفل‌شده (کپی کن و بفرست):</div>
+              <div class="field" id="lockEncOutput" style="word-break:break-all; white-space:pre-wrap;">--</div>
+              <button class="btn-secondary" onclick="copyLockOutput()">📋 کپی متن قفل‌شده</button>
+            </div>
+          </div>
+
+          <div id="lock-dec" style="display:none;">
+            <div class="field-label">متن قفل‌شده</div>
+            <textarea class="field" id="lockCipherText" rows="3" style="resize:vertical;"></textarea>
+            <div class="field-label">رمز عبور</div>
+            <input class="field" id="lockPassDec" type="password">
+            <button class="btn-primary" onclick="decryptTextTool()">🔓 باز کردن متن</button>
+            <div class="result-box" id="lockDecResultBox">
+              <div class="field-label" style="text-align:right;">متن اصلی:</div>
+              <div class="field" id="lockDecOutput" style="word-break:break-all; white-space:pre-wrap;">--</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <nav>
+    <button class="active" id="nav-calc" onclick="switchView('calc')">
+      <span class="ic">🧮</span> ماشین‌حساب
+    </button>
+    <button id="nav-rates" onclick="switchView('rates')">
+      <span class="ic">💱</span> نرخ‌ها
+    </button>
+    <button id="nav-tools" onclick="switchView('tools')">
+      <span class="ic">🛠️</span> ابزارها
+    </button>
+  </nav>
+</div>
+
+<!-- Settings Sheet -->
+<div id="overlay" onclick="if(event.target===this) closeSettings()">
+  <div id="sheet">
+    <h3>⚙️ تنظیمات و ویرایش نرخ‌ها</h3>
+    <p>قیمت‌های بازار آزاد زیر را بر اساس نرخ روز تنظیم کنید.</p>
+    <div class="section-label" style="margin-top:0;">تنظیم قیمت ارزها (تومان)</div>
+    <div class="settings-grid" id="currencyInputs"></div>
+    <div class="section-label">تنظیم طلا و سکه (تومان)</div>
+    <div class="settings-grid">
+      <div><label>طلای ۱۸ عیار (گرم)</label><input type="number" id="input-gram18"></div>
+      <div><label>طلای ۲۴ عیار (گرم)</label><input type="number" id="input-gram24"></div>
+      <div><label>سکه امامی</label><input type="number" id="input-emami"></div>
+      <div><label>سکه بهار آزادی</label><input type="number" id="input-bahar"></div>
+      <div><label>نیم سکه</label><input type="number" id="input-halfCoin"></div>
+      <div><label>ربع سکه</label><input type="number" id="input-quarterCoin"></div>
+      <div><label>سکه گرمی</label><input type="number" id="input-gerami"></div>
+      <div><label>مثقال طلا</label><input type="number" id="input-mesghal"></div>
+      <div><label>آبشده نقدی</label><input type="number" id="input-cashMelted"></div>
+    </div>
+    <div class="row2">
+      <button class="act close" onclick="saveAllSettings()">💾 ذخیره تنظیمات</button>
+    </div>
+  </div>
+</div>
+
+<div id="historyOverlay" onclick="if(event.target===this) closeHistory()">
+  <div id="historySheet" class="sheet-box">
+    <h3>🕐 تاریخچه محاسبات</h3>
+    <p>روی هر مورد بزن تا نتیجه‌اش وارد ماشین‌حساب بشه.</p>
+    <div id="historyList" style="display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto; margin-bottom:14px;"></div>
+    <div class="row2">
+      <button class="act close" onclick="clearHistory()">🗑️ پاک کردن همه</button>
+      <button class="act save" onclick="closeHistory()">بستن</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let theme = "dark";
+
+/* --- Real viewport height fix (prevents content hiding under Android's nav bar) --- */
+function setAppHeight(){
+  const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+  document.documentElement.style.setProperty('--app-height', h + 'px');
+}
+window.addEventListener('resize', setAppHeight);
+window.addEventListener('orientationchange', ()=> setTimeout(setAppHeight, 200));
+if(window.visualViewport){ window.visualViewport.addEventListener('resize', setAppHeight); }
+setAppHeight();
+
+let marketRates = { USD: 175600, EUR: 200850, GBP: 234490, AED: 48824, TRY: 3740, AZN: 103270, CNY: 25900, CHF: 218440, CAD: 123680, IQD: 137, INR: 1843, RUB: 2272 };
+let goldIran = { gram18: 17728400, gram24: 23637700, emami: 178205000, bahar: 174520000, halfCoin: 93000000, quarterCoin: 53500000, gerami: 27500000, mesghal: 76804000, cashMelted: 76835000 };
+
+async function loadState(){
+  try{ const r = localStorage.getItem('state'); if(r) return JSON.parse(r); }catch(e){}
+  return null;
+}
+async function saveState(){
+  try{ localStorage.setItem('state', JSON.stringify({ marketRates, goldIran, theme, pinnedTools, calcHistory, collapsedCats })); }catch(e){}
+}
+let collapsedCats = {};
+function toggleToolCategory(catId){
+  collapsedCats[catId] = !collapsedCats[catId];
+  applyCategoryState(catId);
+  saveState();
+}
+function applyCategoryState(catId){
+  const list = document.getElementById('list-'+catId);
+  const arrow = document.getElementById('arrow-'+catId);
+  if(!list || !arrow) return;
+  const isCollapsed = !!collapsedCats[catId];
+  list.classList.toggle('collapsed', isCollapsed);
+  arrow.classList.toggle('collapsed', isCollapsed);
+}
+function applyAllCategoryStates(){
+  ['cat-basic','cat-fin','cat-qr'].forEach(applyCategoryState);
+}
+function initTheme(){ document.documentElement.setAttribute('data-theme', theme); }
+function toggleTheme(){ theme = theme === "dark" ? "light" : "dark"; initTheme(); saveState(); }
+
+/* --- Calculator Logic --- */
+let expr = ""; let memory = 0;
+const exprEl = document.getElementById('expr');
+const resultEl = document.getElementById('result');
+const memChip = document.getElementById('memChip');
+
+function fmt(n){
+  if(n === "" || n === undefined || isNaN(n)) return "0";
+  let num = Number(n); if(!isFinite(num)) return "خطا";
+  return num.toLocaleString('en-US', {maximumFractionDigits:8});
+}
+function toEvalString(e){ return e.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/\^/g,'**'); }
+function safeEval(e){
+  if(!e) return 0; let s = toEvalString(e);
+  if(!/^[0-9+\-*/.() ]+$/.test(s)) return NaN;
+  s = s.replace(/[+\-*/.]+$/,''); if(!s) return 0;
+  try { return Function('"use strict"; return (' + s + ')')(); } catch(err){ return NaN; }
+}
+function render(){
+  exprEl.textContent = expr === "" ? "0" : expr;
+  let v = safeEval(expr); resultEl.textContent = fmt(v);
+  memChip.style.visibility = memory !== 0 ? 'visible' : 'hidden';
+}
+function append(ch){
+  const ops = ['+','−','×','÷','^'];
+  if(ops.includes(ch) && ops.includes(expr.slice(-1))) expr = expr.slice(0,-1) + ch;
+  else expr += ch;
+  render();
+}
+function insertNumber(numStr){ expr += (expr === "" ? "" : (/[0-9)]$/.test(expr) ? "×" : "")) + numStr; render(); switchView('calc'); }
+function clearAll(){ expr = ""; render(); }
+function backspace(){ expr = expr.slice(0,-1); render(); }
+function doEquals(){
+  let v = safeEval(expr);
+  if(!isNaN(v) && expr.trim() !== ""){ pushHistory(expr, fmt(Math.round(v*1e8)/1e8)); }
+  expr = isNaN(v) ? "" : String(Math.round(v*1e8)/1e8);
+  render();
+}
+function currentValue(){ let v = safeEval(expr); return isNaN(v) ? 0 : v; }
+
+function applyFn(fn){
+  let v = currentValue(), out = v;
+  switch(fn){
+    case 'sin': out = Math.sin(v*Math.PI/180); break;
+    case 'cos': out = Math.cos(v*Math.PI/180); break;
+    case 'tan': out = Math.tan(v*Math.PI/180); break;
+    case 'ln': out = Math.log(v); break;
+    case 'log': out = Math.log10(v); break;
+    case 'sqrt': out = Math.sqrt(v); break;
+    case 'sq': out = v*v; break;
+    case 'percent': out = v/100; break;
+    case 'neg': out = -v; break;
+    case 'inv': out = 1/v; break;
+    case 'cube': out = v*v*v; break;
+    case 'rand': out = Math.random(); break;
+    case 'fact': { if(v < 0 || !Number.isInteger(v) || v > 170){ out = NaN; break; } let f = 1; for(let i=2;i<=v;i++) f*=i; out = f; break; }
+  }
+  out = Math.round(out*1e8)/1e8; expr = isNaN(out) || !isFinite(out) ? "" : String(out); render();
+}
+function memAdd(){ memory += currentValue(); render(); }
+function memSub(){ memory -= currentValue(); render(); }
+function memRecall(){ expr = String(memory); render(); }
+function memClear(){ memory = 0; render(); }
+function toggleSci(){ document.getElementById('sciRows').classList.toggle('open'); }
+
+/* --- Interface Tabs --- */
+function switchView(name){
+  document.getElementById('view-calc').classList.toggle('active', name==='calc');
+  document.getElementById('view-rates').classList.toggle('active', name==='rates');
+  document.getElementById('view-tools').classList.toggle('active', name==='tools');
+  document.getElementById('nav-calc').classList.toggle('active', name==='calc');
+  document.getElementById('nav-rates').classList.toggle('active', name==='rates');
+  document.getElementById('nav-tools').classList.toggle('active', name==='tools');
+
+  // نمایش/مخفی‌سازی دکمه‌های هدر بر اساس تب فعال:
+  // - ماشین‌حساب: بدون دکمه تنظیمات
+  // - نرخ‌ها: بدون دکمه تاریخچه (ساعت)
+  // - ابزارها: بدون تنظیمات و بدون تاریخچه (ساعت)
+  document.getElementById('settingsBtn').style.display = (name==='calc' || name==='tools') ? 'none' : 'flex';
+  document.getElementById('historyBtn').style.display = (name==='rates' || name==='tools') ? 'none' : 'flex';
+}
+function showRateList(which){
+  ['market','global','gold','crypto'].forEach(k=>{
+    document.getElementById('list-'+k).classList.toggle('on', k===which);
+    document.getElementById('tab-'+k).classList.toggle('on', k===which);
+  });
+}
+
+/* --- Financial Lists --- */
+const CURRENCIES = [
+  {code:'USD', name:'دلار آمریکا', flag:'🇺🇸'}, {code:'EUR', name:'یورو', flag:'🇪🇺'},
+  {code:'GBP', name:'پوند انگلیس', flag:'🇬🇧'}, {code:'AED', name:'درهم امارات', flag:'🇦🇪'},
+  {code:'TRY', name:'لیر ترکیه', flag:'🇹🇷'}, {code:'AZN', name:'منات آذربایجان', flag:'🇦🇿'},
+  {code:'CNY', name:'یوان چین', flag:'🇨🇳'}, {code:'CHF', name:'فرانک سوئیس', flag:'🇨🇭'},
+  {code:'CAD', name:'دلار کانادا', flag:'🇨🇦'}, {code:'IQD', name:'دینار عراق', flag:'🇮🇶'},
+  {code:'INR', name:'روپیه هند', flag:'🇮🇳'}, {code:'RUB', name:'روبل روسیه', flag:'🇷🇺'}
+];
+
+function makeCard(cls, flag, name, code, valStr, subStr, onTap){
+  const card = document.createElement('div'); card.className = 'rate-card ' + cls;
+  card.innerHTML = `
+    <div class="rate-left"><span class="flag">${flag}</span><div><div class="rname">${name}</div><div class="rcode">${code}</div></div></div>
+    <div class="rval-wrap"><div class="rval">${valStr}</div>${subStr ? `<div class="rsub">${subStr}</div>` : ''}</div>
+  `;
+  if(onTap) card.onclick = onTap; return card;
+}
+function renderMarketCards(){
+  const box = document.getElementById('marketCards'); box.innerHTML = "";
+  CURRENCIES.forEach(c=>{ const val = marketRates[c.code] ?? 0; box.appendChild(makeCard('market', c.flag, c.name, c.code, fmt(val)+'<span class="runit">تومان</span>', null, ()=> insertNumber(String(val)))); });
+}
+function renderGoldIranCards(){
+  const box = document.getElementById('goldIranCards'); box.innerHTML = "";
+  box.appendChild(makeCard('market', '🥇', 'طلای ۱۸ عیار (گرم)', 'GOLD18', fmt(goldIran.gram18)+'<span class="runit">تومان</span>', null, ()=> insertNumber(String(goldIran.gram18))));
+  box.appendChild(makeCard('market', '🥇', 'طلای ۲۴ عیار (گرم)', 'GOLD24', fmt(goldIran.gram24)+'<span class="runit">تومان</span>', null, ()=> insertNumber(String(goldIran.gram24))));
+  box.appendChild(makeCard('market', '🔶', 'سکه امامی', 'EMAMI', fmt(goldIran.emami)+'<span class="runit">تومان</span>', null, ()=> insertNumber(String(goldIran.emami))));
+  box.appendChild(makeCard('market', '🟡', 'سکه بهار آزادی', 'COIN', fmt(goldIran.bahar)+'<span class="runit">تومان</span>', null, ()=> insertNumber(String(goldIran.bahar))));
+  box.appendChild(makeCard('market', '🔶', 'نیم سکه', 'HALFCOIN', fmt(goldIran.halfCoin)+'<span class="runit">تومان</span>', null, ()=> insertNumber(String(goldIran.halfCoin))));
+  box.appendChild(makeCard('market', '🔶', 'ربع سکه', 'QUARTERCOIN', fmt(goldIran.quarterCoin)+'<span class="runit">تومان</span>', null, ()=> insertNumber(String(goldIran.quarterCoin))));
+  box.appendChild(makeCard('market', '🔶', 'سکه گرمی', 'GERAMI', fmt(goldIran.gerami)+'<span class="runit">تومان</span>', null, ()=> insertNumber(String(goldIran.gerami))));
+  box.appendChild(makeCard('market', '☀️', 'مثقال طلا', 'MESGHAL', fmt(goldIran.mesghal)+'<span class="runit">تومان</span>', null, ()=> insertNumber(String(goldIran.mesghal))));
+  box.appendChild(makeCard('market', '☀️', 'آبشده نقدی', 'CASHGOLD', fmt(goldIran.cashMelted)+'<span class="runit">تومان</span>', null, ()=> insertNumber(String(goldIran.cashMelted))));
+}
+function renderGlobalCards(rates, base){
+  const box = document.getElementById('globalCards'); box.innerHTML = "";
+  CURRENCIES.forEach(c=>{ let val = c.code === base ? 1 : (rates && rates[c.code] ? rates[c.code] : null); box.appendChild(makeCard('global', c.flag, c.name, `1 ${base} = ? ${c.code}`, val!==null? fmt(val) : '—', null, val!==null ? ()=> insertNumber(String(val)) : null)); });
+}
+function renderGoldCards(xau, xag){
+  const box = document.getElementById('goldCards'); box.innerHTML = "";
+  const usdToman = marketRates.USD || 0, gramOz = 31.1035, est18 = xau ? Math.round(xau * usdToman / gramOz * 0.75) : null;
+  box.appendChild(makeCard('gold', '🥇', 'طلا (XAU) — اونس', 'USD', xau? '$'+fmt(xau) : '—', est18 ? '۱۸ عیار تخمینی: '+fmt(est18)+' تومان' : null, xau? ()=> insertNumber(String(xau)) : null));
+  box.appendChild(makeCard('gold', '🥈', 'نقره (XAG) — اونس', 'USD', xag? '$'+fmt(xag) : '—', null, xag? ()=> insertNumber(String(xag)) : null));
+}
+const CRYPTOS = [
+  {id:'bitcoin', code:'BTC', name:'بیت‌کوین', flag:'🟠'}, {id:'ethereum', code:'ETH', name:'اتریوم', flag:'🔷'},
+  {id:'tether', code:'USDT', name:'تتر', flag:'💵'}, {id:'binancecoin', code:'BNB', name:'بایننس کوین', flag:'🟡'},
+  {id:'ripple', code:'XRP', name:'ریپل', flag:'💠'}, {id:'solana', code:'SOL', name:'سولانا', flag:'🟣'}
+];
+function renderCryptoCards(prices){
+  const box = document.getElementById('cryptoCards'); box.innerHTML = ""; const usdToman = marketRates.USD || 0;
+  CRYPTOS.forEach(c=>{ const p = prices && prices[c.id] ? prices[c.id].usd : null; const tomanVal = p ? Math.round(p * usdToman) : null; box.appendChild(makeCard('crypto', c.flag, c.name, c.code, p? '$'+fmt(p) : '—', tomanVal? '≈ '+fmt(tomanVal)+' تومان' : null, p? ()=> insertNumber(String(p)) : null)); });
+}
+
+/* --- Data Fetchers --- */
+const FALLBACK_FX = { USD:1, EUR:0.926, GBP:0.787, AED:3.6725, TRY:39.0, AZN:1.70, CNY:7.17, CHF:0.80, CAD:1.36, IQD:1310, INR:83.5, RUB:90.0 };
+const FALLBACK_GOLD = { xau:4180, xag:36.5 };
+const FALLBACK_CRYPTO = {bitcoin:{usd:61800}, ethereum:{usd:1715}, tether:{usd:1.0}, binancecoin:{usd:561}, ripple:{usd:1.1}, solana:{usd:81}};
+let lastGold = FALLBACK_GOLD;
+let lastCrypto = FALLBACK_CRYPTO;
+async function fetchGlobalRates(){
+  try{ const res = await fetch('https://open.er-api.com/v6/latest/USD'); const d = await res.json(); if(d&&d.rates){ renderGlobalCards(d.rates, 'USD'); document.getElementById('globalUpdated').textContent = 'بروزرسانی زنده: ' + new Date().toLocaleTimeString('fa-IR'); return;} }catch(e){}
+  renderGlobalCards(FALLBACK_FX, 'USD'); document.getElementById('globalUpdated').textContent = 'نمایش نرخ‌های پیش‌فرض';
+}
+async function fetchGoldRates(){
+  try{ const [rXau, rXag] = await Promise.all([fetch('https://api.gold-api.com/price/XAU'), fetch('https://api.gold-api.com/price/XAG')]); const dXau = await rXau.json(); const dXag = await rXag.json(); const xau = dXau?.price ?? dXau?.Price; const xag = dXag?.price ?? dXag?.Price; if(xau){ lastGold = {xau, xag}; renderGoldCards(xau, xag); document.getElementById('goldUpdated').textContent = 'بروزرسانی زنده: ' + new Date().toLocaleTimeString('fa-IR'); return; } }catch(e){}
+  lastGold = FALLBACK_GOLD; renderGoldCards(FALLBACK_GOLD.xau, FALLBACK_GOLD.xag); document.getElementById('goldUpdated').textContent = 'نمایش قیمت پیش‌فرض اونس';
+}
+async function fetchCryptoRates(){
+  try{ const ids = CRYPTOS.map(c=>c.id).join(','); const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`); const d = await res.json(); if(d&&d.bitcoin){ lastCrypto = d; renderCryptoCards(d); document.getElementById('cryptoUpdated').textContent = 'بروزرسانی زنده: ' + new Date().toLocaleTimeString('fa-IR'); return; } }catch(e){}
+  lastCrypto = FALLBACK_CRYPTO; renderCryptoCards(FALLBACK_CRYPTO); document.getElementById('cryptoUpdated').textContent = 'نمایش قیمت پیش‌فرض کریپتو';
+}
+
+/* --- Settings Dashboard --- */
+function openSettings(){
+  const box = document.getElementById('currencyInputs'); box.innerHTML = "";
+  CURRENCIES.forEach(c => { const d = document.createElement('div'); d.innerHTML = `<label>${c.flag} ${c.name}</label><input type="number" id="cfg-${c.code}" value="${marketRates[c.code] ?? ''}">`; box.appendChild(d); });
+  document.getElementById('input-gram18').value = goldIran.gram18;
+  document.getElementById('input-gram24').value = goldIran.gram24;
+  document.getElementById('input-emami').value = goldIran.emami;
+  document.getElementById('input-bahar').value = goldIran.bahar;
+  document.getElementById('input-halfCoin').value = goldIran.halfCoin;
+  document.getElementById('input-quarterCoin').value = goldIran.quarterCoin;
+  document.getElementById('input-gerami').value = goldIran.gerami;
+  document.getElementById('input-mesghal').value = goldIran.mesghal;
+  document.getElementById('input-cashMelted').value = goldIran.cashMelted;
+  document.getElementById('overlay').classList.add('on');
+}
+function closeSettings(){ document.getElementById('overlay').classList.remove('on'); }
+function saveAllSettings(){
+  CURRENCIES.forEach(c => { const v = parseFloat(document.getElementById(`cfg-${c.code}`).value); if(!isNaN(v)) marketRates[c.code] = v; });
+  const fields = ['gram18','gram24','emami','bahar','halfCoin','quarterCoin','gerami','mesghal','cashMelted'];
+  fields.forEach(f => { const v = parseFloat(document.getElementById(`input-${f}`).value); if(!isNaN(v)) goldIran[f] = v; });
+  renderMarketCards(); renderGoldIranCards(); renderGoldCards(lastGold.xau, lastGold.xag); renderCryptoCards(lastCrypto); saveState(); closeSettings();
+}
+
+/* --- Functional Tools --- */
+const TOOL_META = {
+  bmi:{icon:'⚖️',name:'BMI'}, age:{icon:'🎂',name:'محاسبه سن'}, convdate:{icon:'📅',name:'تبدیل تاریخ'},
+  percent:{icon:'٪',name:'درصدگیری'}, discount:{icon:'🏷️',name:'تخفیف'}, unit:{icon:'📐',name:'مبدل واحد'},
+  loan:{icon:'🏦',name:'وام'}, deposit:{icon:'💵',name:'سود سپرده'}, split:{icon:'🧾',name:'دنگی'},
+  trade:{icon:'📈',name:'سود معامله'}, duration:{icon:'⏳',name:'فاصله تاریخ'},
+  qr:{icon:'🔳',name:'ساخت QR'}, scan:{icon:'📷',name:'اسکن QR'}, pass:{icon:'🔑',name:'رمز عبور'},
+  stego:{icon:'🖼️',name:'مخفی‌سازی'}, lock:{icon:'🔐',name:'رمزنگاری'}
+};
+let pinnedTools = [];
+function setupPinStars(){
+  document.querySelectorAll('.tool-row').forEach(row=>{
+    if(row.querySelector('.tool-star')) return; // already set up
+    const attr = row.getAttribute('onclick') || '';
+    const m = attr.match(/openTool\('(\w+)'\)/);
+    if(!m) return;
+    const id = m[1];
+    const star = document.createElement('div');
+    star.className = 'tool-star' + (pinnedTools.includes(id) ? ' on' : '');
+    star.textContent = pinnedTools.includes(id) ? '⭐' : '☆';
+    star.onclick = (e)=>{ e.stopPropagation(); togglePin(id); };
+    row.insertBefore(star, row.querySelector('.tarrow'));
+  });
+}
+function togglePin(id){
+  const i = pinnedTools.indexOf(id);
+  if(i>-1) pinnedTools.splice(i,1); else pinnedTools.push(id);
+  document.querySelectorAll('.tool-row').forEach(row=>{
+    const attr = row.getAttribute('onclick') || '';
+    const m = attr.match(/openTool\('(\w+)'\)/);
+    if(!m || m[1]!==id) return;
+    const star = row.querySelector('.tool-star');
+    star.classList.toggle('on', pinnedTools.includes(id));
+    star.textContent = pinnedTools.includes(id) ? '⭐' : '☆';
+  });
+  renderPinnedShortcuts();
+  saveState();
+}
+function renderPinnedShortcuts(){
+  const box = document.getElementById('pinnedShortcuts');
+  if(pinnedTools.length === 0){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display = 'block';
+  box.innerHTML = '<div class="tool-section-title" style="margin-top:0;">⭐ میانبرها</div><div class="pinned-row"></div>';
+  const row = box.querySelector('.pinned-row');
+  pinnedTools.forEach(id=>{
+    const meta = TOOL_META[id]; if(!meta) return;
+    const item = document.createElement('div');
+    item.className = 'pinned-item';
+    item.innerHTML = `<div class="ticon" style="background:var(--surface2);">${meta.icon}</div><div class="pname">${meta.name}</div>`;
+    item.onclick = ()=> openTool(id);
+    row.appendChild(item);
+  });
+}
+
+/* --- Calculator History --- */
+let calcHistory = [];
+function pushHistory(exprStr, resultStr){
+  if(calcHistory.length && calcHistory[0].e === exprStr) return;
+  calcHistory.unshift({ e: exprStr, r: resultStr });
+  if(calcHistory.length > 30) calcHistory.pop();
+  saveState();
+}
+function openHistory(){
+  const list = document.getElementById('historyList');
+  list.innerHTML = calcHistory.length ? '' : '<div class="hint" style="margin:0;">هنوز محاسبه‌ای ثبت نشده.</div>';
+  calcHistory.forEach(h=>{
+    const row = document.createElement('div');
+    row.className = 'field';
+    row.style.cursor = 'pointer';
+    row.innerHTML = `<div style="font-size:11px; color:var(--muted);">${h.e}</div><div style="font-size:16px; font-weight:700; color:var(--amber);">= ${h.r}</div>`;
+    row.onclick = ()=>{ insertNumber(h.r.replace(/,/g,'')); closeHistory(); };
+    list.appendChild(row);
+  });
+  document.getElementById('historyOverlay').classList.add('on');
+}
+function closeHistory(){ document.getElementById('historyOverlay').classList.remove('on'); }
+function clearHistory(){ calcHistory = []; saveState(); openHistory(); }
+
+function openTool(name){ document.getElementById('toolsHome').style.display='none'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); document.getElementById('tool-'+name).classList.add('on'); if(name=='age') initShamsiSelectors(); if(name=='convdate') updateConvSelectors(); if(name=='unit') initUnitSelectors(); if(name=='pass') updatePassLenSlider(document.getElementById('passLen')); if(name=='duration') initDurationSelectors(); }
+function closeTool(){ document.getElementById('toolsHome').style.display='block'; document.querySelectorAll('.toolpage').forEach(e=>e.classList.remove('on')); }
+function numOf(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; }
+
+function calcBMI(){
+  const hCm = numOf('bmiHeight'), w = numOf('bmiWeight'), box = document.getElementById('bmiResult');
+  if(!hCm || !w || hCm<=0 || w<=0){ box.classList.remove('on'); alert('قد و وزن را درست وارد کنید.'); return; }
+  const h = hCm/100, bmi = w/(h*h);
+  document.getElementById('bmiValue').textContent = bmi.toFixed(1);
+  let tag, color, pct, adviceText = "";
+  const maxNormalWeight = 24.9 * (h * h);
+  if(bmi < 18.5){
+    tag='کم‌وزن'; color='#59C3B4'; pct = (bmi-12)/(18.5-12)*25;
+    const minNormalWeight = 18.5 * (h * h);
+    adviceText = `وزن هدف شما باید حداقل افزایش یابد. شما نیاز به افزایش <b style="color:var(--sky); font-size:15px;">${Math.ceil(minNormalWeight - w)} کیلوگرم</b> دارید.`;
+  } else if(bmi < 25){
+    tag='طبیعی'; color='#2D8A7E'; pct = 25 + (bmi-18.5)/(25-18.5)*30;
+    adviceText = `شاخص توده بدنی عالی است! در محدوده <b style="color:var(--teal); font-size:15px;">کاملاً طبیعی و ایده آل</b> هستید.`;
+  } else if(bmi < 30){
+    tag='اضافه‌وزن'; color='#F2A93B'; pct = 55 + (bmi-25)/(30-25)*25;
+    adviceText = `شما دارای <b style="color:var(--gold); font-size:15px;">${Math.ceil(w - maxNormalWeight)} کیلوگرم اضافه وزن</b> هستید. باید لاغر شوید.`;
+  } else {
+    tag='چاق'; color='#E2664B'; pct = 80 + (bmi-30)/(40-30)*20;
+    adviceText = `شما در وضعیت چاقی قرار دارید و <b style="color:var(--danger); font-size:16px;">${Math.ceil(w - maxNormalWeight)} کیلوگرم وزن اضافی</b> دارید.`;
+  }
+  const tEl = document.getElementById('bmiTag'); tEl.textContent = tag; tEl.style.background = color; tEl.style.color = '#12201C';
+  document.getElementById('bmiAdvice').innerHTML = adviceText;
+  document.getElementById('bmiPtr').style.left = Math.max(0,Math.min(100,pct))+'%'; 
+  box.classList.add('on');
+}
+
+/* --- Gregorian / Shamsi / Hijri Core Logic --- */
+function updateShamsiDays(){
+  const m = parseInt(document.getElementById('shamsiMonth').value) || 1;
+  const dSel = document.getElementById('shamsiDay');
+  const len = jalaliMonthLen(m);
+  const prevVal = parseInt(dSel.value) || 1;
+  dSel.innerHTML = "";
+  for(let i=1;i<=len;i++){ let o=document.createElement('option'); o.value=i; o.textContent=i; dSel.appendChild(o); }
+  dSel.value = Math.min(prevVal, len);
+}
+
+function initShamsiSelectors(){
+  const y = document.getElementById('shamsiYear'); if(y.children.length > 0) return;
+  for(let i=1405; i>=1300; i--){ let o=document.createElement('option'); o.value=i; o.textContent=i; if(i===1380) o.selected=true; y.appendChild(o); }
+  updateShamsiDays();
+}
+
+function shamsiToGregorian(jy, jm, jd) {
+  jy += 1595; let days = -355668 + (365 * jy) + (Math.floor(jy / 33) * 8) + (Math.floor(((jy % 33) + 3) / 4)) + jd + ((jm < 8) ? (jm - 1) * 31 : ((jm - 7) * 30) + 186);
+  let gy = 400 * Math.floor(days / 146097); days %= 146097;
+  if (days > 36524) { gy += 100 * Math.floor(--days / 36524); days %= 36524; if (days >= 365) days++; }
+  gy += 4 * Math.floor(days / 1461); days %= 1461; if (days > 365) { gy += Math.floor((days - 1) / 365); days = (days - 1) % 365; }
+  let gd = days + 1, sal_a = [0, 31, ((gy % 4 === 0 && gy % 100 !== 0) || (gy % 400 === 0)) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31], gm;
+  for (gm = 0; gm < 13 && gd > sal_a[gm]; gm++) gd -= sal_a[gm]; return [gy, gm, gd];
+}
+
+function gregorianToShamsi(gy, gm, gd) {
+  let d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334]; let gy2 = (gm > 2) ? (gy + 1) : gy;
+  let days = 355666 + (365 * gy) + Math.floor((gy2 + 3) / 4) - Math.floor((gy2 + 99) / 100) + Math.floor((gy2 + 399) / 400) + gd + d_m[gm - 1];
+  let jy = -1595 + 33 * Math.floor(days / 12053); days %= 12053; jy += 4 * Math.floor(days / 1461); days %= 1461;
+  if (days > 365) { jy += Math.floor((days - 1) / 365); days = (days - 1) % 365; }
+  let jm = (days < 186) ? 1 + Math.floor(days / 31) : 7 + Math.floor((days - 186) / 30);
+  let jd = 1 + ((days < 186) ? (days % 31) : ((days - 186) % 30)); return [jy, jm, jd];
+}
+
+function gregorianToHijri(gy, gm, gd) {
+  if (gm < 3) { gy--; gm += 12; }
+  let a = Math.floor(gy / 100), b = Math.floor(a / 4), c = 2 - a + b, e = Math.floor(365.25 * (gy + 4716)), f = Math.floor(30.6001 * (gm + 1));
+  let jd = c + gd + e + f - 1524.5;
+  let emotionalM = Math.floor((jd - 1948439.5) / 29.530588853);
+  let hy = Math.floor((emotionalM / 12) + 1); let hm = Math.floor(emotionalM % 12) + 1;
+  let hd = Math.round(jd - (Math.floor(29.530588853 * emotionalM) + 1948439.5)) + 1;
+  if(hd > 30) { hd -= 30; hm++; } if(hm > 12) { hm -= 12; hy++; }
+  return [hy, hm, hd];
+}
+
+function hijriToGregorian(hy, hm, hd) {
+  let emotionalM = Math.floor((hy - 1) * 12 + hm - 1);
+  let jd = Math.floor(29.530588853 * emotionalM) + 1948439.5 + hd - 1;
+  let z = Math.floor(jd + 0.5), alpha = Math.floor((z - 1867216.25) / 36524.25), a = z + 1 + alpha - Math.floor(alpha / 4);
+  let b = a + 1524, c = Math.floor((b - 122.1) / 365.25), d = Math.floor(365.25 * c), x = Math.floor((b - d) / 30.6001);
+  let gd = b - d - Math.floor(30.6001 * x), gm = x < 14 ? x - 1 : x - 13, gy = gm > 2 ? c - 4716 : c - 4715;
+  return [gy, gm, gd];
+}
+
+/* --- Converter UI Selectors --- */
+function convMonthLen(type, y, m){
+  if(type === 'shamsi') return jalaliMonthLen(m);
+  if(type === 'hijri') return 29; // safe minimum for lunar months (29 or 30)
+  // gregorian
+  const leap = (y%4===0 && y%100!==0) || y%400===0;
+  const g = [31, leap?29:28, 31,30,31,30,31,31,30,31,30,31];
+  return g[m-1] || 31;
+}
+function updateConvSelectors() {
+  const type = document.getElementById('convSourceType').value;
+  const ySel = document.getElementById('convYear'), mSel = document.getElementById('convMonth'), dSel = document.getElementById('convDay');
+  ySel.innerHTML = ""; mSel.innerHTML = "";
+
+  let startYear = 1300, endYear = 1450, months = [];
+  if(type === 'shamsi') {
+    startYear = 1300; endYear = 1420;
+    months = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+  } else if(type === 'gregorian') {
+    startYear = 1920; endYear = 2040;
+    months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  } else {
+    startYear = 1340; endYear = 1470;
+    months = ['محرم','صفر','ربیع‌الاول','ربیع‌الثانی','جمادی‌الاول','جمادی‌الثانی','رجب','شعبان','رمضان','شوال','ذیقعده','ذیحجه'];
+  }
+
+  for(let i = endYear; i >= startYear; i--) { let o = document.createElement('option'); o.value = i; o.textContent = i; ySel.appendChild(o); }
+  months.forEach((m, idx) => { let o = document.createElement('option'); o.value = idx + 1; o.textContent = m; mSel.appendChild(o); });
+  mSel.onchange = () => updateConvDays();
+  ySel.onchange = () => updateConvDays();
+  updateConvDays();
+}
+function updateConvDays(){
+  const type = document.getElementById('convSourceType').value;
+  const y = parseInt(document.getElementById('convYear').value) || 1400;
+  const m = parseInt(document.getElementById('convMonth').value) || 1;
+  const dSel = document.getElementById('convDay');
+  const len = convMonthLen(type, y, m);
+  const prevVal = parseInt(dSel.value) || 1;
+  dSel.innerHTML = "";
+  for(let i = 1; i <= len; i++) { let o = document.createElement('option'); o.value = i; o.textContent = i; dSel.appendChild(o); }
+  dSel.value = Math.min(prevVal, len);
+}
+
+function processDateConversion() {
+  const type = document.getElementById('convSourceType').value;
+  const y = parseInt(document.getElementById('convYear').value);
+  const m = parseInt(document.getElementById('convMonth').value);
+  const d = parseInt(document.getElementById('convDay').value);
+
+  let gY, gM, gD, sY, sM, sD, hY, hM, hD;
+
+  if(type === 'shamsi') {
+    let g = shamsiToGregorian(y, m, d); gY = g[0]; gM = g[1]; gD = g[2];
+    sY = y; sM = m; sD = d;
+    let h = gregorianToHijri(gY, gM, gD); hY = h[0]; hM = h[1]; hD = h[2];
+  } else if(type === 'gregorian') {
+    gY = y; gM = m; gD = d;
+    let s = gregorianToShamsi(gY, gM, gD); sY = s[0]; sM = s[1]; sD = s[2];
+    let h = gregorianToHijri(gY, gM, gD); hY = h[0]; hM = h[1]; hD = h[2];
+  } else {
+    let g = hijriToGregorian(y, m, d); gY = g[0]; gM = g[1]; gD = g[2];
+    let s = gregorianToShamsi(gY, gM, gD); sY = s[0]; sM = s[1]; sD = s[2];
+    hY = y; hM = m; hD = d;
+  }
+
+  document.getElementById('outShamsi').textContent = `${sY}/${String(sM).padStart(2,'0')}/${String(sD).padStart(2,'0')}`;
+  document.getElementById('outGregorian').textContent = `${gY}/${String(gM).padStart(2,'0')}/${String(gD).padStart(2,'0')}`;
+  document.getElementById('outHijri').textContent = `${hY}/${String(hM).padStart(2,'0')}/${String(hD).padStart(2,'0')}`;
+  document.getElementById('convResultBox').classList.add('on');
+}
+
+function jalaliMonthLen(m){ if(m<=6) return 31; if(m<=11) return 30; return 29; }
+
+function calcAgeShamsi(){
+  const jy = parseInt(document.getElementById('shamsiYear').value), jm = parseInt(document.getElementById('shamsiMonth').value), jd = parseInt(document.getElementById('shamsiDay').value), box = document.getElementById('ageResultBox');
+  const gB = shamsiToGregorian(jy, jm, jd), birthDate = new Date(gB[0], gB[1] - 1, gB[2]), nowDate = new Date();
+  if(birthDate > nowDate){ alert('تاریخ تولد نامعتبر است.'); return; }
+  
+  let d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
+  let g_y = nowDate.getFullYear(), g_m = nowDate.getMonth()+1, g_d = nowDate.getDate();
+  let gy2 = (g_m > 2) ? (g_y + 1) : g_y;
+  let days = 355666 + (365 * g_y) + Math.floor((gy2 + 3) / 4) - Math.floor((gy2 + 99) / 100) + Math.floor((gy2 + 399) / 400) + g_d + d_m[g_m - 1];
+  let curY = -1595 + 33 * Math.floor(days / 12053); days %= 12053; curY += 4 * Math.floor(days / 1461); days %= 1461;
+  if (days > 365) { curY += Math.floor((days - 1) / 365); days = (days - 1) % 365; }
+  let curM = (days < 186) ? 1 + Math.floor(days / 31) : 7 + Math.floor((days - 186) / 30);
+  let curD = 1 + ((days < 186) ? (days % 31) : ((days - 186) % 30));
+
+  let dY = curY - jy, dM = curM - jm, dD = curD - jd;
+  if (dD < 0) { dM -= 1; let prevM = curM - 1; if(prevM < 1) prevM = 12; dD += jalaliMonthLen(prevM); } if (dM < 0) { dY -= 1; dM += 12; }
+  
+  const totalDays = Math.floor((nowDate - birthDate) / 86400000);
+  let targetY = (curM > jm || (curM === jm && curD >= jd)) ? curY + 1 : curY;
+  const gN = shamsiToGregorian(targetY, jm, jd), nextB = new Date(gN[0], gN[1] - 1, gN[2]);
+  
+  document.getElementById('resYear').textContent = dY;
+  document.getElementById('resMonth').textContent = dM;
+  document.getElementById('resDay').textContent = dD;
+  document.getElementById('ageDays').textContent = fmt(totalDays);
+  document.getElementById('ageToBday').textContent = fmt(Math.ceil((nextB - nowDate) / 86400000));
+  box.classList.add('on');
+}
+
+/* --- Percent Operations --- */
+let percentMode = 'of', changeDir = 'inc';
+function setPercentMode(m){ percentMode = m; document.querySelectorAll('#percentChips .chip').forEach(c=> c.classList.toggle('on', c.dataset.m===m)); document.getElementById('pf-of').style.display = m==='of' ? 'block' : 'none'; document.getElementById('pf-change').style.display = m==='change' ? 'block' : 'none'; document.getElementById('pf-ratio').style.display = m==='ratio' ? 'block' : 'none'; document.getElementById('percentResultBox').classList.remove('on'); }
+function setChangeDir(d){ changeDir = d; document.querySelectorAll('#pf-change .chip').forEach(c=> c.classList.toggle('on', c.dataset.d===d)); }
+function calcPercent(){
+  const box = document.getElementById('percentResultBox');
+  if(percentMode === 'of'){
+    const p = numOf('ofPercent'), a = numOf('ofAmount'); if(p===null || a===null) return;
+    document.getElementById('percentMain').textContent = fmt(a * p / 100) + ' تومان'; document.getElementById('percentSub').textContent = `${p}٪ از ${fmt(a)} تومان`;
+  } else if(percentMode === 'change'){
+    const a = numOf('chAmount'), p = numOf('chPercent'); if(a===null || p===null) return;
+    const res = changeDir==='inc' ? a * (1+p/100) : a * (1-p/100);
+    document.getElementById('percentMain').textContent = fmt(Math.round(res)) + ' تومان'; document.getElementById('percentSub').textContent = `${changeDir==='inc'?'افزایش':'کاهش'} ${p}٪ نسبت به ${fmt(a)} — تفاوت: ${fmt(Math.round(Math.abs(res-a)))}`;
+  } else if(percentMode === 'ratio'){
+    const part = numOf('raPart'), total = numOf('raTotal'); if(part===null || total===null || total===0) return;
+    document.getElementById('percentMain').textContent = (part/total*100).toFixed(2) + '٪'; document.getElementById('percentSub').textContent = `نسبت ${fmt(part)} به کل ${fmt(total)}`;
+  }
+  box.classList.add('on');
+}
+
+function calcDiscount(){
+  const price = numOf('dsPrice'), disc = numOf('dsDiscount') ?? 0, tax = numOf('dsTax') ?? 0, box = document.getElementById('discountResultBox'); if(!price) return;
+  const after = price * (1 - disc/100), finalPrice = after * (1 + tax/100);
+  document.getElementById('discountMain').textContent = fmt(Math.round(finalPrice)) + ' تومان';
+  document.getElementById('discountSub').textContent = `قیمت نهایی با احتساب ${disc}٪ تخفیف و ${tax}٪ مالیات`; box.classList.add('on');
+}
+
+/* --- QR Code Tool --- */
+let qrType = 'url';
+let qrLogo = 'none';
+let qrCustomLogoImg = null;
+function setQrType(t){
+  qrType = t;
+  document.querySelectorAll('.qr-type[data-t]').forEach(el=> el.classList.toggle('on', el.dataset.t===t));
+  document.querySelectorAll('.qr-fields').forEach(el=> el.classList.toggle('on', el.id === 'qrf-'+t));
+  document.getElementById('qrCanvasBox').style.display='none';
+  document.getElementById('qrDownloadBtn').style.display='none';
+}
+function setQrLogo(l){
+  qrLogo = l;
+  document.querySelectorAll('.qr-type[data-l]').forEach(el=> el.classList.toggle('on', el.dataset.l===l));
+  document.getElementById('qrLogoHint').style.display = l==='custom' ? 'block' : 'none';
+  if(l === 'custom'){ document.getElementById('qrLogoFile').click(); }
+}
+function onQrLogoFile(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    const img = new Image();
+    img.onload = ()=>{ qrCustomLogoImg = img; };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function qval(id){ return document.getElementById(id).value.trim(); }
+function generateQr(){
+  let content = "";
+  switch(qrType){
+    case 'url': { let v=qval('qrUrl'); if(!v){alert('آدرس وبسایت را وارد کنید.');return;} if(!/^https?:\/\//i.test(v)) v='https://'+v; content=v; break; }
+    case 'text': { let v=qval('qrText'); if(!v){alert('متن را وارد کنید.');return;} content=v; break; }
+    case 'wifi': { let ssid=qval('qrWifiSsid'), pass=qval('qrWifiPass'), enc=document.getElementById('qrWifiEnc').value; if(!ssid){alert('نام شبکه را وارد کنید.');return;} content = `WIFI:T:${enc};S:${ssid};P:${enc==='nopass'?'':pass};;`; break; }
+    case 'sms': { let p=qval('qrSmsPhone'), m=qval('qrSmsMsg'); if(!p){alert('شماره را وارد کنید.');return;} content = `SMSTO:${p}:${m}`; break; }
+    case 'tel': { let p=qval('qrTelPhone'); if(!p){alert('شماره را وارد کنید.');return;} content = `tel:${p}`; break; }
+    case 'whatsapp': { let p=qval('qrWaPhone'), m=qval('qrWaMsg'); if(!p){alert('شماره واتساپ را وارد کنید.');return;} content = `https://wa.me/${p.replace(/\D/g,'')}` + (m? `?text=${encodeURIComponent(m)}`:''); break; }
+    case 'instagram': { let u=qval('qrIgUser'); if(!u){alert('آیدی اینستاگرام را وارد کنید.');return;} content = `https://instagram.com/${u.replace('@','')}`; break; }
+    case 'telegram': { let u=qval('qrTgUser'), p=qval('qrTgPhone'); if(!u && !p){alert('آیدی یا شماره تلگرام را وارد کنید.');return;} content = u ? `https://t.me/${u.replace('@','')}` : `https://t.me/+${p.replace(/\D/g,'')}`; break; }
+    case 'vcard': { let n=qval('qrVName'), p=qval('qrVPhone'), e=qval('qrVEmail'), o=qval('qrVOrg'); if(!n){alert('نام را وارد کنید.');return;}
+      content = `BEGIN:VCARD\nVERSION:3.0\nFN:${n}\n${p?'TEL:'+p+'\n':''}${e?'EMAIL:'+e+'\n':''}${o?'ORG:'+o+'\n':''}END:VCARD`; break; }
+  }
+  const box = document.getElementById('qrCanvasBox');
+  box.innerHTML = "";
+  box.style.display = 'flex';
+  try{
+    if(typeof QRCode === 'undefined') throw new Error('lib not loaded');
+    new QRCode(box, { text: content, width:240, height:240, colorDark:"#12201C", colorLight:"#ffffff", correctLevel: QRCode.CorrectLevel.H });
+    document.getElementById('qrDownloadBtn').style.display = 'block';
+    setTimeout(()=> drawQrLogoOverlay(box), 60);
+  }catch(e){
+    box.innerHTML = '<div style="color:#B33; padding:20px; font-size:12px; text-align:center;">ساخت QR نیاز به بار اول اتصال اینترنت دارد تا کتابخانه بارگذاری شود. یک‌بار با اینترنت وصل شو و دوباره امتحان کن.</div>';
+    document.getElementById('qrDownloadBtn').style.display = 'none';
+  }
+}
+function drawQrLogoOverlay(box){
+  if(qrLogo === 'none') return;
+  const canvas = box.querySelector('canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const size = canvas.width;
+  const logoSize = size * 0.22;
+  const cx = size/2, cy = size/2;
+  // white rounded backdrop so the logo doesn't blend into QR modules
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(cx-logoSize/2-4, cy-logoSize/2-4, logoSize+8, logoSize+8, 10) : ctx.rect(cx-logoSize/2-4, cy-logoSize/2-4, logoSize+8, logoSize+8);
+  ctx.fill();
+
+  if(qrLogo === 'custom' && qrCustomLogoImg){
+    ctx.drawImage(qrCustomLogoImg, cx-logoSize/2, cy-logoSize/2, logoSize, logoSize);
+    return;
+  }
+  const presets = {
+    instagram: {bg:'#D3684C', emoji:'📷'},
+    whatsapp: {bg:'#25D366', emoji:'💬'},
+    telegram: {bg:'#3B9FE0', emoji:'✈️'}
+  };
+  const p = presets[qrLogo];
+  if(!p) return;
+  ctx.fillStyle = p.bg;
+  ctx.beginPath(); ctx.arc(cx, cy, logoSize/2, 0, Math.PI*2); ctx.fill();
+  ctx.font = (logoSize*0.55)+'px sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(p.emoji, cx, cy+1);
+}
+function downloadQr(){
+  const canvas = document.querySelector('#qrCanvasBox canvas');
+  if(!canvas){ alert('ابتدا QR کد را بسازید.'); return; }
+  const link = document.createElement('a');
+  link.download = 'qrcode.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+/* --- QR Scanner Tool --- */
+let scanStream = null;
+let scanRAF = null;
+function closeToolScan(){ stopScan(); closeTool(); }
+async function startScan(){
+  const video = document.getElementById('scanVideo');
+  try{
+    scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+  }catch(e){
+    alert('دسترسی به دوربین داده نشد. از تنظیمات گوشی اجازه دوربین را برای این برنامه فعال کن.');
+    return;
+  }
+  video.srcObject = scanStream;
+  await video.play();
+  document.getElementById('scanStartBtn').style.display = 'none';
+  document.getElementById('scanStopBtn').style.display = 'block';
+  document.getElementById('scanResultBox').classList.remove('on');
+  scanLoop();
+}
+function stopScan(){
+  if(scanRAF) cancelAnimationFrame(scanRAF);
+  scanRAF = null;
+  if(scanStream){ scanStream.getTracks().forEach(t=>t.stop()); scanStream = null; }
+  document.getElementById('scanStartBtn').style.display = 'block';
+  document.getElementById('scanStopBtn').style.display = 'none';
+}
+function scanLoop(){
+  const video = document.getElementById('scanVideo');
+  const canvas = document.getElementById('scanCanvas');
+  if(video.readyState === video.HAVE_ENOUGH_DATA && typeof jsQR !== 'undefined'){
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imgData.data, canvas.width, canvas.height);
+    if(code && code.data){
+      stopScan();
+      handleScanResult(code.data);
+      return;
+    }
+  }
+  scanRAF = requestAnimationFrame(scanLoop);
+}
+function handleScanResult(text){
+  document.getElementById('scanRawText').textContent = text;
+  const actions = document.getElementById('scanActions');
+  actions.innerHTML = "";
+  const addBtn = (label, onClick)=>{
+    const b = document.createElement('button');
+    b.className = 'btn-primary'; b.style.marginBottom = '0'; b.textContent = label;
+    b.onclick = onClick;
+    actions.appendChild(b);
+  };
+  const addLink = (label, href)=>{
+    const a = document.createElement('a');
+    a.className = 'btn-primary'; a.style.marginBottom='0'; a.style.display='block'; a.style.textDecoration='none'; a.style.textAlign='center';
+    a.textContent = label; a.href = href; a.target = '_blank'; a.rel = 'noopener';
+    actions.appendChild(a);
+  };
+
+  if(/^https?:\/\//i.test(text)){
+    if(/wa\.me|api\.whatsapp\.com/i.test(text)) addLink('🟢 باز کردن در واتساپ', text);
+    else if(/t\.me\//i.test(text)) addLink('✈️ باز کردن در تلگرام', text);
+    else if(/instagram\.com/i.test(text)) addLink('📷 باز کردن اینستاگرام', text);
+    else addLink('🌐 باز کردن سایت', text);
+  } else if(/^tel:/i.test(text)){
+    const num = text.replace(/^tel:/i,'');
+    addLink('📞 تماس بگیر', text);
+    addLink('💬 ارسال پیامک', 'sms:'+num);
+  } else if(/^SMSTO:/i.test(text)){
+    const parts = text.split(':'); const num = parts[1]; const msg = parts.slice(2).join(':');
+    addLink('💬 ارسال پیامک به ' + num, `sms:${num}${msg? '?body='+encodeURIComponent(msg):''}`);
+  } else if(/^WIFI:/i.test(text)){
+    const ssidM = text.match(/S:([^;]*);/); const passM = text.match(/P:([^;]*);/);
+    const ssid = ssidM ? ssidM[1] : '—'; const pass = passM ? passM[1] : '';
+    document.getElementById('scanRawText').textContent = `شبکه: ${ssid}\nرمز: ${pass || '(بدون رمز)'}`;
+    addBtn('📋 کپی رمز وای‌فای', ()=>{ navigator.clipboard?.writeText(pass).then(()=> alert('رمز کپی شد. حالا از تنظیمات وای‌فای گوشی، شبکه را انتخاب و رمز را وارد کن (اتصال خودکار از طریق مرورگر ممکن نیست).')); });
+  } else if(/^BEGIN:VCARD/i.test(text)){
+    addBtn('👤 افزودن به مخاطبین', ()=>{
+      const blob = new Blob([text], {type:'text/vcard'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'contact.vcf'; a.click();
+      URL.revokeObjectURL(url);
+    });
+  } else {
+    addBtn('📋 کپی متن', ()=>{ navigator.clipboard?.writeText(text).then(()=> alert('متن کپی شد.')); });
+  }
+  document.getElementById('scanResultBox').classList.add('on');
+}
+
+/* --- Unit Converter --- */
+const UNIT_DATA = {
+  length: { units:{mm:0.001,cm:0.01,m:1,km:1000,in:0.0254,ft:0.3048,yd:0.9144,mi:1609.344}, names:{mm:'میلی‌متر',cm:'سانتی‌متر',m:'متر',km:'کیلومتر',in:'اینچ',ft:'فوت',yd:'یارد',mi:'مایل'} },
+  weight: { units:{mg:1e-6,g:0.001,kg:1,ton:1000,lb:0.45359237,oz:0.028349523}, names:{mg:'میلی‌گرم',g:'گرم',kg:'کیلوگرم',ton:'تن',lb:'پوند',oz:'اونس'} },
+  volume: { units:{ml:0.001,l:1,m3:1000,galUS:3.785411784,cupUS:0.2365882365}, names:{ml:'میلی‌لیتر',l:'لیتر',m3:'مترمکعب',galUS:'گالن آمریکایی',cupUS:'فنجان آمریکایی'} },
+  digital: { units:{bit:0.125,B:1,KB:1024,MB:1048576,GB:1073741824,TB:1099511627776}, names:{bit:'بیت',B:'بایت',KB:'کیلوبایت',MB:'مگابایت',GB:'گیگابایت',TB:'ترابایت'} },
+  temp: { special:true, units:{C:1,F:1,K:1}, names:{C:'سلسیوس',F:'فارنهایت',K:'کلوین'} }
+};
+let unitCat = 'length';
+function setUnitCat(c){
+  unitCat = c;
+  document.querySelectorAll('#unitChips .chip').forEach(el=> el.classList.toggle('on', el.dataset.c===c));
+  populateUnitSelects();
+  computeUnit();
+}
+function populateUnitSelects(){
+  const data = UNIT_DATA[unitCat];
+  const keys = Object.keys(data.units);
+  const fromSel = document.getElementById('unitFrom'), toSel = document.getElementById('unitTo');
+  fromSel.innerHTML = ""; toSel.innerHTML = "";
+  keys.forEach((k,i)=>{
+    fromSel.appendChild(new Option(data.names[k], k, i===0, i===0));
+    toSel.appendChild(new Option(data.names[k], k, i===1, i===1));
+  });
+}
+function initUnitSelectors(){ populateUnitSelects(); computeUnit(); }
+function tempConvert(v, from, to){
+  let c;
+  if(from==='C') c=v; else if(from==='F') c=(v-32)*5/9; else c=v-273.15;
+  if(to==='C') return c; if(to==='F') return c*9/5+32; return c+273.15;
+}
+function computeUnit(){
+  const v = parseFloat(document.getElementById('unitValue').value);
+  const from = document.getElementById('unitFrom').value, to = document.getElementById('unitTo').value;
+  const out = document.getElementById('unitResult');
+  if(isNaN(v)){ out.textContent = '--'; return; }
+  let result;
+  if(UNIT_DATA[unitCat].special){ result = tempConvert(v, from, to); }
+  else { const data = UNIT_DATA[unitCat].units; result = v * data[from] / data[to]; }
+  out.textContent = fmt(Math.round(result*1e6)/1e6) + ' ' + UNIT_DATA[unitCat].names[to];
+}
+function swapUnit(){
+  const fromSel = document.getElementById('unitFrom'), toSel = document.getElementById('unitTo');
+  const tmp = fromSel.value; fromSel.value = toSel.value; toSel.value = tmp;
+  computeUnit();
+}
+
+/* --- Password Generator --- */
+function updatePassLenSlider(el){
+  const min = parseFloat(el.min), max = parseFloat(el.max), val = parseFloat(el.value);
+  const pct = ((val - min) / (max - min)) * 100;
+  el.style.background = `linear-gradient(to right, var(--violet) 0%, var(--violet) ${pct}%, var(--surface2) ${pct}%, var(--surface2) 100%)`;
+  document.getElementById('passLenLabel').textContent = val;
+}
+function setPassLevel(level, isManualEdit){
+  document.querySelectorAll('#passLevelChips .chip').forEach(c=> c.classList.toggle('on', c.dataset.lv === (isManualEdit ? 'custom' : level)));
+  if(isManualEdit) return;
+  const presets = {
+    medium:   { len:10, upper:false, lower:true,  num:true,  sym:false },
+    strong:   { len:14, upper:true,  lower:true,  num:true,  sym:false },
+    advanced: { len:22, upper:true,  lower:true,  num:true,  sym:true  }
+  };
+  const p = presets[level];
+  if(!p) return; // "custom" preset: leave current controls untouched
+  document.getElementById('passLen').value = p.len;
+  updatePassLenSlider(document.getElementById('passLen'));
+  document.getElementById('passUpper').classList.toggle('on', p.upper);
+  document.getElementById('passLower').classList.toggle('on', p.lower);
+  document.getElementById('passNum').classList.toggle('on', p.num);
+  document.getElementById('passSym').classList.toggle('on', p.sym);
+}
+function generatePassword(){
+  const len = parseInt(document.getElementById('passLen').value);
+  const useUpper = document.getElementById('passUpper').classList.contains('on');
+  const useLower = document.getElementById('passLower').classList.contains('on');
+  const useNum = document.getElementById('passNum').classList.contains('on');
+  const useSym = document.getElementById('passSym').classList.contains('on');
+  const noAmbig = document.getElementById('passNoAmbig').classList.contains('on');
+  const useObscure = document.getElementById('passObscure').classList.contains('on');
+  const ambiguous = 'Il1O0o';
+  const stripAmbig = (s) => noAmbig ? s.split('').filter(c=>!ambiguous.includes(c)).join('') : s;
+  const sets = [];
+  if(useUpper) sets.push(stripAmbig('ABCDEFGHIJKLMNOPQRSTUVWXYZ'));
+  if(useLower) sets.push(stripAmbig('abcdefghijklmnopqrstuvwxyz'));
+  if(useNum) sets.push(stripAmbig('0123456789'));
+  if(useSym) sets.push('!@#$%^&*()-_=+?');
+  if(useObscure) sets.push('{}[]()/\\\'"~,;.:<>`');
+  if(sets.length===0){ alert('حداقل یک نوع کاراکتر را انتخاب کن.'); return; }
+  const all = sets.join('');
+  const arr = new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  let pass = '';
+  // guarantee at least one char from each selected set
+  sets.forEach((s,i)=>{ pass += s[arr[i] % s.length]; });
+  for(let i=sets.length; i<len; i++){ pass += all[arr[i] % all.length]; }
+  // shuffle
+  pass = pass.split('').sort(()=> 0.5 - Math.random()).join('').slice(0, len);
+  document.getElementById('passOutput').textContent = pass;
+  let score = 0;
+  if(len>=12) score++; if(len>=16) score++;
+  if(sets.length>=3) score++; if(sets.length===4) score++;
+  const tag = document.getElementById('passStrength');
+  const levels = [
+    {t:'ضعیف', c:'var(--danger)'}, {t:'متوسط', c:'var(--gold)'}, {t:'خوب', c:'var(--sky)'}, {t:'قوی', c:'var(--teal)'}, {t:'خیلی قوی', c:'var(--teal)'}
+  ];
+  const lv = levels[Math.min(score, 4)];
+  tag.textContent = lv.t; tag.style.background = lv.c; tag.style.color = '#12201C';
+  document.getElementById('passResultBox').classList.add('on');
+}
+function copyPassword(){
+  const p = document.getElementById('passOutput').textContent;
+  if(!p || p==='--') return;
+  navigator.clipboard?.writeText(p).then(()=> alert('رمز کپی شد.'));
+}
+
+/* --- Steganography (LSB) --- */
+function setStegoMode(m){
+  document.querySelectorAll('#tool-stego .chip').forEach(el=> el.classList.toggle('on', el.dataset.s===m));
+  document.getElementById('stego-hide').style.display = m==='hide' ? 'block' : 'none';
+  document.getElementById('stego-reveal').style.display = m==='reveal' ? 'block' : 'none';
+}
+let stegoImg = null;
+function loadStegoImage(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{ const img = new Image(); img.onload = ()=>{ stegoImg = img; }; img.src = ev.target.result; };
+  reader.readAsDataURL(file);
+}
+function strToBits(str){
+  const bytes = new TextEncoder().encode(str);
+  let bits = [];
+  // 32-bit length header
+  for(let i=31;i>=0;i--) bits.push((bytes.length >> i) & 1);
+  bytes.forEach(b=>{ for(let i=7;i>=0;i--) bits.push((b >> i) & 1); });
+  return bits;
+}
+function hideStegoText(){
+  if(!stegoImg){ alert('اول یک عکس انتخاب کن.'); return; }
+  const text = document.getElementById('stegoHideText').value;
+  if(!text){ alert('متن مخفی را وارد کن.'); return; }
+  const canvas = document.getElementById('stegoCanvas');
+  canvas.width = stegoImg.width; canvas.height = stegoImg.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(stegoImg, 0, 0);
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const bits = strToBits(text);
+  const capacity = imgData.data.length / 4 * 3; // 3 channels per pixel (skip alpha)
+  if(bits.length > capacity){ alert('این متن برای این عکس خیلی طولانیه؛ عکس بزرگتری انتخاب کن یا متن را کوتاه‌تر کن.'); return; }
+  let bitIdx = 0;
+  for(let i=0; i<imgData.data.length && bitIdx<bits.length; i+=4){
+    for(let ch=0; ch<3 && bitIdx<bits.length; ch++){
+      imgData.data[i+ch] = (imgData.data[i+ch] & 0xFE) | bits[bitIdx];
+      bitIdx++;
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+  const preview = document.getElementById('stegoHidePreview');
+  preview.innerHTML = '';
+  const img = document.createElement('img');
+  img.src = canvas.toDataURL('image/png');
+  img.style.maxWidth = '100%'; img.style.borderRadius = '12px';
+  preview.appendChild(img);
+  preview.style.display = 'block';
+  document.getElementById('stegoDownloadBtn').style.display = 'block';
+}
+function downloadStego(){
+  const canvas = document.getElementById('stegoCanvas');
+  const link = document.createElement('a');
+  link.download = 'hidden-message.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+function revealStegoText(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width; canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      let bits = [];
+      for(let i=0; i<imgData.data.length; i+=4){
+        for(let ch=0; ch<3; ch++) bits.push(imgData.data[i+ch] & 1);
+      }
+      let len = 0;
+      for(let i=0;i<32;i++) len = (len<<1) | bits[i];
+      if(len <= 0 || len > (bits.length-32)/8){
+        document.getElementById('stegoRevealedText').textContent = 'متنی پیدا نشد (این عکس شاید حاوی پیام مخفی نیست یا فشرده شده).';
+      } else {
+        const byteArr = new Uint8Array(len);
+        for(let i=0;i<len;i++){
+          let byte = 0;
+          for(let b=0;b<8;b++){ byte = (byte<<1) | bits[32 + i*8 + b]; }
+          byteArr[i] = byte;
+        }
+        document.getElementById('stegoRevealedText').textContent = new TextDecoder().decode(byteArr);
+      }
+      document.getElementById('stegoRevealBox').classList.add('on');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* --- Loan / Installment Calculator --- */
+function calcLoan(){
+  const P = numOf('loanAmount'), rate = numOf('loanRate'), n = numOf('loanMonths');
+  const box = document.getElementById('loanResultBox');
+  if(!P || !n || P<=0 || n<=0){ alert('مبلغ وام و تعداد اقساط را درست وارد کن.'); return; }
+  const r = (rate || 0) / 100 / 12;
+  let installment;
+  if(r === 0) installment = P / n;
+  else installment = P * r * Math.pow(1+r, n) / (Math.pow(1+r, n) - 1);
+  const total = installment * n;
+  const interest = total - P;
+  document.getElementById('loanMain').textContent = fmt(Math.round(installment)) + ' تومان';
+  document.getElementById('loanTotal').textContent = fmt(Math.round(total));
+  document.getElementById('loanInterest').textContent = fmt(Math.round(interest));
+  box.classList.add('on');
+}
+
+/* --- Bank Deposit Calculator --- */
+function calcDeposit(){
+  const P = numOf('depAmount'), rate = numOf('depRate'), months = numOf('depMonths');
+  const box = document.getElementById('depResultBox');
+  if(!P || !rate || !months || P<=0){ alert('مقادیر را کامل وارد کن.'); return; }
+  const monthly = P * (rate/100) / 12;
+  const total = monthly * months;
+  document.getElementById('depMonthly').textContent = fmt(Math.round(monthly)) + ' تومان';
+  document.getElementById('depTotal').textContent = fmt(Math.round(total));
+  document.getElementById('depFinal').textContent = fmt(Math.round(P + total));
+  box.classList.add('on');
+}
+
+/* --- Bill Split Calculator --- */
+function calcSplit(){
+  const total = numOf('splitAmount'), people = numOf('splitPeople'), tip = numOf('splitTip') || 0;
+  const box = document.getElementById('splitResultBox');
+  if(!total || !people || total<=0 || people<=0){ alert('مبلغ و تعداد نفرات را درست وارد کن.'); return; }
+  const withTip = total * (1 + tip/100);
+  const perPerson = withTip / people;
+  document.getElementById('splitMain').textContent = fmt(Math.round(perPerson)) + ' تومان';
+  document.getElementById('splitSub').textContent = `مبلغ کل با انعام: ${fmt(Math.round(withTip))} تومان — بین ${people} نفر`;
+  box.classList.add('on');
+}
+
+/* --- Trade Profit/Loss Calculator --- */
+function calcTrade(){
+  const buy = numOf('tradeBuy'), sell = numOf('tradeSell'), qty = numOf('tradeQty') || 1;
+  const box = document.getElementById('tradeResultBox');
+  if(!buy || !sell || buy<=0){ alert('قیمت خرید و فروش را درست وارد کن.'); return; }
+  const profit = (sell - buy) * qty;
+  const pct = (sell - buy) / buy * 100;
+  const isProfit = profit >= 0;
+  document.getElementById('tradeMain').textContent = (isProfit?'+':'') + fmt(Math.round(profit));
+  document.getElementById('tradeMain').style.color = isProfit ? 'var(--teal)' : 'var(--danger)';
+  const tag = document.getElementById('tradeTag');
+  tag.textContent = (isProfit?'سود ':'زیان ') + Math.abs(pct).toFixed(2) + '٪';
+  tag.style.background = isProfit ? 'var(--teal)' : 'var(--danger)';
+  tag.style.color = '#12201C';
+  box.classList.add('on');
+}
+
+/* --- Duration Calculator --- */
+function populateDurYear(id){
+  const y = document.getElementById(id);
+  if(y.children.length > 0) return;
+  for(let i=1420; i>=1300; i--){ let o=document.createElement('option'); o.value=i; o.textContent=i; if(i===1404) o.selected=true; y.appendChild(o); }
+}
+function updateDurDays(which){
+  const mSel = document.getElementById(which==='start' ? 'durStartM' : 'durEndM');
+  const dSel = document.getElementById(which==='start' ? 'durStartD' : 'durEndD');
+  const m = parseInt(mSel.value) || 1;
+  const len = jalaliMonthLen(m);
+  const prevVal = parseInt(dSel.value) || 1;
+  dSel.innerHTML = "";
+  for(let i=1; i<=len; i++){ let o=document.createElement('option'); o.value=i; o.textContent=i; dSel.appendChild(o); }
+  dSel.value = Math.min(prevVal, len);
+}
+function initDurationSelectors(){
+  populateDurYear('durStartY'); populateDurYear('durEndY');
+  updateDurDays('start'); updateDurDays('end');
+}
+function calcDuration(){
+  const sy=parseInt(document.getElementById('durStartY').value), sm=parseInt(document.getElementById('durStartM').value), sd=parseInt(document.getElementById('durStartD').value);
+  const ey=parseInt(document.getElementById('durEndY').value), em=parseInt(document.getElementById('durEndM').value), ed=parseInt(document.getElementById('durEndD').value);
+  const [sh, smin] = document.getElementById('durStartTime').value.split(':').map(Number);
+  const [eh, emin] = document.getElementById('durEndTime').value.split(':').map(Number);
+  const gS = shamsiToGregorian(sy, sm, sd), gE = shamsiToGregorian(ey, em, ed);
+  const startDate = new Date(gS[0], gS[1]-1, gS[2], sh||0, smin||0);
+  const endDate = new Date(gE[0], gE[1]-1, gE[2], eh||0, emin||0);
+  const box = document.getElementById('durResultBox');
+  const diffMs = endDate - startDate;
+  const sign = diffMs < 0 ? -1 : 1;
+  const absMs = Math.abs(diffMs);
+  const totalMinutes = Math.floor(absMs / 60000);
+  const totalHours = Math.floor(absMs / 3600000);
+  const totalDays = Math.floor(absMs / 86400000);
+  const remHours = Math.floor((absMs % 86400000) / 3600000);
+  const remMinutes = Math.floor((absMs % 3600000) / 60000);
+  document.getElementById('durMain').textContent = (sign<0 ? '− ' : '') + `${fmt(totalDays)} روز و ${remHours} ساعت و ${remMinutes} دقیقه`;
+  document.getElementById('durDays').textContent = fmt(totalDays);
+  document.getElementById('durHours').textContent = fmt(totalHours);
+  document.getElementById('durMinutes').textContent = fmt(totalMinutes);
+  box.classList.add('on');
+}
+
+/* --- Text Encryption (AES-256-GCM via Web Crypto) --- */
+function setLockMode(m){
+  document.querySelectorAll('#tool-lock .chip').forEach(el=> el.classList.toggle('on', el.dataset.lk===m));
+  document.getElementById('lock-enc').style.display = m==='enc' ? 'block' : 'none';
+  document.getElementById('lock-dec').style.display = m==='dec' ? 'block' : 'none';
+}
+function bufToBase64(buf){
+  const bytes = new Uint8Array(buf);
+  let binary = '';
+  for(let i=0; i<bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+function base64ToBuf(b64){
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+async function deriveLockKey(password, salt){
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), {name:'PBKDF2'}, false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'}, keyMaterial, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+}
+async function encryptTextTool(){
+  const text = document.getElementById('lockPlainText').value;
+  const pass = document.getElementById('lockPassEnc').value;
+  if(!text || !pass){ alert('متن و رمز عبور را وارد کن.'); return; }
+  try{
+    const enc = new TextEncoder();
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveLockKey(pass, salt);
+    const cipherBuf = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, enc.encode(text));
+    const combined = new Uint8Array(salt.length + iv.length + cipherBuf.byteLength);
+    combined.set(salt, 0); combined.set(iv, salt.length); combined.set(new Uint8Array(cipherBuf), salt.length + iv.length);
+    document.getElementById('lockEncOutput').textContent = bufToBase64(combined.buffer);
+    document.getElementById('lockEncResultBox').classList.add('on');
+  }catch(e){ alert('خطا در رمزنگاری. دوباره امتحان کن.'); }
+}
+function copyLockOutput(){
+  const t = document.getElementById('lockEncOutput').textContent;
+  if(!t || t==='--') return;
+  navigator.clipboard?.writeText(t).then(()=> alert('متن قفل‌شده کپی شد.')).catch(()=>{});
+}
+async function decryptTextTool(){
+  const b64 = document.getElementById('lockCipherText').value.trim();
+  const pass = document.getElementById('lockPassDec').value;
+  const outEl = document.getElementById('lockDecOutput');
+  if(!b64 || !pass){ alert('متن قفل‌شده و رمز عبور را وارد کن.'); return; }
+  try{
+    const combined = base64ToBuf(b64);
+    const salt = combined.slice(0,16), iv = combined.slice(16,28), data = combined.slice(28);
+    const key = await deriveLockKey(pass, salt);
+    const plainBuf = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, data);
+    outEl.textContent = new TextDecoder().decode(plainBuf);
+  }catch(e){
+    outEl.textContent = 'رمز عبور اشتباه است یا متن قفل‌شده خراب/ناقص است.';
+  }
+  document.getElementById('lockDecResultBox').classList.add('on');
+}
+
+/* --- Initialization --- */
+async function init(){
+  const saved = await loadState(); if(saved){ if(saved.marketRates) marketRates = Object.assign(marketRates, saved.marketRates); if(saved.goldIran) goldIran = Object.assign(goldIran, saved.goldIran); if(saved.theme) theme = saved.theme; if(Array.isArray(saved.pinnedTools)) pinnedTools = saved.pinnedTools; if(Array.isArray(saved.calcHistory)) calcHistory = saved.calcHistory; if(saved.collapsedCats) collapsedCats = saved.collapsedCats; }
+  initTheme(); render(); renderMarketCards(); renderGoldIranCards(); renderGlobalCards(FALLBACK_FX, 'USD'); renderGoldCards(FALLBACK_GOLD.xau, FALLBACK_GOLD.xag); renderCryptoCards(FALLBACK_CRYPTO);
+  setupPinStars(); renderPinnedShortcuts();
+  fetchGlobalRates(); fetchGoldRates(); fetchCryptoRates();
+  switchView('calc'); // تنظیم اولیه دکمه‌های هدر برای تب پیش‌فرض (ماشین‌حساب)
+  applyAllCategoryStates(); // اعمال وضعیت باز/بسته بودن دسته‌بندی‌های ابزارها
+}
+init();
+</script>
+</body>
+</html>
