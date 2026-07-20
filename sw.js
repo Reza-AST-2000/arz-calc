@@ -1,4 +1,4 @@
-const CACHE_NAME = "calc-arz-v91";
+const CACHE_NAME = "calc-arz-v92";
 const ASSETS = [
   "./",
   "./index.html",
